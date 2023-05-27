@@ -42,6 +42,10 @@ def get_text():
     return st.text_input("You: ", "Hello, how are you?", key="input")
 
 
+def chat_prompt(text):
+    return f"{anthropic.HUMAN_PROMPT} {text}{anthropic.AI_PROMPT}"
+
+
 def main():
     st.set_page_config(
         page_title="Vocava - Demo",
@@ -62,13 +66,11 @@ def main():
     context = ""
     if user_input:
         translated_input = translate(user_input, native_lang, target_lang)
+        context += chat_prompt(translated_input)
 
-        current_inp = f"{anthropic.HUMAN_PROMPT} {translated_input}{anthropic.AI_PROMPT}"
-        context += current_inp
-
-        completion_translated = query(prompt=context)
-        completion = translate(completion_translated, target_lang, native_lang)
-        context += completion_translated
+        completion = query(prompt=context)
+        context += completion
+        completion_translated = translate(completion, target_lang, native_lang)
 
         embeddings = embed([user_input, completion])
         embedding_user, embedding_bot = embeddings
