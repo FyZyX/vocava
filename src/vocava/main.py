@@ -7,11 +7,19 @@ import streamlit as st
 from chromadb.utils import embedding_functions
 from streamlit_chat import message as chat_message
 
+from st_custom_components import st_audiorec
+
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
 
 
-def query(prompt):
+def chat_prompt(text):
+    return f"{anthropic.HUMAN_PROMPT} {text}{anthropic.AI_PROMPT}"
+
+
+def query(prompt, debug=True):
+    if debug:
+        return "response message"
     client = anthropic.Client(api_key=ANTHROPIC_API_KEY)
     response = client.completion(
         prompt=prompt,
@@ -22,12 +30,14 @@ def query(prompt):
     return response["completion"]
 
 
-def translate(text, src_lang, tgt_lang):
+def translate(text, src_lang, tgt_lang, debug=True):
+    if debug:
+        return f"{text} ({src_lang} -> {tgt_lang})"
     client = anthropic.Client(api_key=ANTHROPIC_API_KEY)
     prompt = f"Translate the TEXT from {src_lang} to {tgt_lang}\n" \
              f"TEXT:\n\"{text}\""
     response = client.completion(
-        prompt=prompt,
+        prompt=chat_prompt(prompt),
         stop_sequences=[anthropic.HUMAN_PROMPT],
         model="claude-v1.3-100k",
         max_tokens_to_sample=200,
@@ -42,10 +52,6 @@ def embed(docs: list[str]):
 
 def get_text():
     return st.text_input("You: ", "Hello, how are you?", key="input")
-
-
-def chat_prompt(text):
-    return f"{anthropic.HUMAN_PROMPT} {text}{anthropic.AI_PROMPT}"
 
 
 def main():
@@ -71,10 +77,15 @@ def main():
     if 'history' not in st.session_state:
         st.session_state['history'] = []
 
+    wav_audio_data = st_audiorec()
+    if wav_audio_data is not None:
+        with open("tmp.wav", "wb") as file:
+            file.write(wav_audio_data)
+
     user_input = get_text()
 
     context = ""
-    if user_input:
+    if st.button("Send"):
         translated_input = translate(user_input, native_lang, target_lang)
         context += chat_prompt(translated_input)
 
