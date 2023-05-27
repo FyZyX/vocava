@@ -8,14 +8,31 @@ from streamlit_chat import message as chat_message
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 COHERE_API_KEY = st.secrets['cohere_api_key']
 
+# Set your native and target languages
+NATIVE_LANG = 'en'
+TARGET_LANG = 'fr'
+
 
 def query(prompt):
     client = anthropic.Client(api_key=ANTHROPIC_API_KEY)
     response = client.completion(
-        prompt=f"{anthropic.HUMAN_PROMPT} {prompt}{anthropic.AI_PROMPT}",
+        prompt=prompt,
         stop_sequences=[anthropic.HUMAN_PROMPT],
         model="claude-v1.3-100k",
-        max_tokens_to_sample=100,
+        max_tokens_to_sample=200,
+    )
+    return response["completion"]
+
+
+def translate(text, src_lang, tgt_lang):
+    client = anthropic.Client(api_key=ANTHROPIC_API_KEY)
+    prompt = f"Translate the TEXT from {src_lang} to {tgt_lang}\n" \
+             f"TEXT:\n\"{text}\""
+    response = client.completion(
+        prompt=prompt,
+        stop_sequences=[anthropic.HUMAN_PROMPT],
+        model="claude-v1.3-100k",
+        max_tokens_to_sample=200,
     )
     return response["completion"]
 
@@ -37,31 +54,49 @@ def main():
 
     st.header("Vocava")
 
-    if 'generated' not in st.session_state:
-        st.session_state['generated'] = []
-
-    if 'past' not in st.session_state:
-        st.session_state['past'] = []
+    if 'history' not in st.session_state:
+        st.session_state['history'] = []
 
     user_input = get_text()
 
     context = ""
     if user_input:
-        current_inp = f"{anthropic.HUMAN_PROMPT} {user_input}{anthropic.AI_PROMPT}"
+        # Translate user input to target language
+        translated_input = translate(user_input, NATIVE_LANG, TARGET_LANG)
+
+        current_inp = f"{anthropic.HUMAN_PROMPT} {translated_input}{anthropic.AI_PROMPT}"
         context += current_inp
 
-        completion = query(prompt=context)
-        context += completion
+        # Generate response in target language
+        completion_translated = query(prompt=context)
 
-        embedding_user, embedding_bot = embed([user_input, completion])
+        # Translate response back to native language
+        completion = translate(completion_translated, TARGET_LANG, NATIVE_LANG)
+        context += completion_translated
 
-        st.session_state['past'].append((user_input, embedding_user))
-        st.session_state['generated'].append((completion, embedding_bot))
+        # Get embeddings
+        embeddings = embed([user_input, completion])
+        embedding_user, embedding_bot = embeddings
 
-    if st.session_state['generated']:
-        for i in range(len(st.session_state['generated']) - 1, -1, -1):
-            chat_message(st.session_state["generated"][i][0], key=str(i))
-            chat_message(st.session_state['past'][i][0], is_user=True, key=f'{i}_user')
+        # Store in history
+        st.session_state['history'].append({
+            'user': {
+                'text': user_input,
+                'translated': translated_input,
+                'embedding': embedding_user,
+            },
+            'bot': {
+                'text': completion,
+                'translated': completion_translated,
+                'embedding': embedding_bot,
+            }
+        })
+
+    if st.session_state['history']:
+        for i in range(len(st.session_state['history']) - 1, -1, -1):
+            message = st.session_state["history"][i]
+            chat_message(message['bot']['text'], key=f"{i}")
+            chat_message(message['user']['text'], is_user=True, key=f'{i}_user')
 
 
 if __name__ == '__main__':
