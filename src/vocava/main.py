@@ -72,8 +72,17 @@ def main():
         context += completion
         completion_translated = translate(completion, target_lang, native_lang)
 
-        embeddings = embed([user_input, completion])
-        embedding_user, embedding_bot = embeddings
+        (
+            embedding_user,
+            embedding_user_translated,
+            embedding_bot,
+            embedding_bot_translated,
+        ) = embed([
+            user_input,
+            translated_input,
+            completion,
+            completion_translated,
+        ])
 
         st.session_state['history'].append({
             'user': {
