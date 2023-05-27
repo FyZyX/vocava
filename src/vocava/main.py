@@ -1,10 +1,12 @@
 import os
 
 import anthropic
+import cohere
 import streamlit as st
-from streamlit_chat import message
+from streamlit_chat import message as chat_message
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+COHERE_API_KEY = st.secrets['cohere_api_key']
 
 
 def query(prompt):
@@ -16,6 +18,11 @@ def query(prompt):
         max_tokens_to_sample=100,
     )
     return response["completion"]
+
+
+def embed(docs: list[str]):
+    cohere_client = cohere.Client(api_key=COHERE_API_KEY)
+    return cohere_client.embed(texts=docs, model='embed-english')
 
 
 def get_text():
@@ -41,17 +48,20 @@ def main():
     context = ""
     if user_input:
         current_inp = f"{anthropic.HUMAN_PROMPT} {user_input}{anthropic.AI_PROMPT}"
-        st.session_state.past.append(user_input)
         context += current_inp
 
         completion = query(prompt=context)
-        st.session_state.generated.append(completion)
         context += completion
+
+        embedding_user, embedding_bot = embed([user_input, completion])
+
+        st.session_state['past'].append((user_input, embedding_user))
+        st.session_state['generated'].append((completion, embedding_bot))
 
     if st.session_state['generated']:
         for i in range(len(st.session_state['generated']) - 1, -1, -1):
-            message(st.session_state["generated"][i], key=str(i))
-            message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
+            chat_message(st.session_state["generated"][i][0], key=str(i))
+            chat_message(st.session_state['past'][i][0], is_user=True, key=f'{i}_user')
 
 
 if __name__ == '__main__':
