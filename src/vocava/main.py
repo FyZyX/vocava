@@ -1,8 +1,10 @@
+import io
 import time
 
 import anthropic
 import chromadb
 import cohere
+import openai
 import streamlit as st
 from chromadb.utils import embedding_functions
 from streamlit_chat import message as chat_message
@@ -11,6 +13,7 @@ from st_custom_components import st_audiorec
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
+openai.api_key = st.secrets["openai_api_key"]
 
 
 def chat_prompt(text):
@@ -50,8 +53,8 @@ def embed(docs: list[str]):
     return cohere_client.embed(texts=docs, model='embed-english')
 
 
-def get_text():
-    return st.text_input("You: ", "Hello, how are you?", key="input")
+def get_text(default):
+    return st.text_input("You: ", default, key="input")
 
 
 def main():
@@ -77,12 +80,17 @@ def main():
     if 'history' not in st.session_state:
         st.session_state['history'] = []
 
+    default_user_input = ""
+
     wav_audio_data = st_audiorec()
     if wav_audio_data is not None:
-        with open("tmp.wav", "wb") as file:
-            file.write(wav_audio_data)
+        file = io.BytesIO(wav_audio_data)
+        file.name = "tmp.wav"
+        with st.spinner():
+            response = openai.Audio.transcribe("whisper-1", file)
+            default_user_input = response["text"]
 
-    user_input = get_text()
+    user_input = get_text(default_user_input)
 
     context = ""
     if st.button("Send"):
