@@ -24,11 +24,11 @@ def get_text():
 
 def main():
     st.set_page_config(
-        page_title="Streamlit Chat - Demo",
+        page_title="Vocava - Demo",
         page_icon=":robot:"
     )
 
-    st.header("Vocava - Demo")
+    st.header("Vocava")
 
     if 'generated' not in st.session_state:
         st.session_state['generated'] = []
