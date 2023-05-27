@@ -8,10 +8,6 @@ from streamlit_chat import message as chat_message
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 COHERE_API_KEY = st.secrets['cohere_api_key']
 
-# Set your native and target languages
-NATIVE_LANG = 'en'
-TARGET_LANG = 'fr'
-
 
 def query(prompt):
     client = anthropic.Client(api_key=ANTHROPIC_API_KEY)
@@ -54,6 +50,10 @@ def main():
 
     st.header("Vocava")
 
+    col1, col2 = st.columns(2)
+    native_lang = col1.text_input("Your native language: ", "en")
+    target_lang = col2.text_input("Your target language: ", "fr")
+
     if 'history' not in st.session_state:
         st.session_state['history'] = []
 
@@ -61,42 +61,38 @@ def main():
 
     context = ""
     if user_input:
-        # Translate user input to target language
-        translated_input = translate(user_input, NATIVE_LANG, TARGET_LANG)
+        translated_input = translate(user_input, native_lang, target_lang)
 
         current_inp = f"{anthropic.HUMAN_PROMPT} {translated_input}{anthropic.AI_PROMPT}"
         context += current_inp
 
-        # Generate response in target language
         completion_translated = query(prompt=context)
-
-        # Translate response back to native language
-        completion = translate(completion_translated, TARGET_LANG, NATIVE_LANG)
+        completion = translate(completion_translated, target_lang, native_lang)
         context += completion_translated
 
-        # Get embeddings
         embeddings = embed([user_input, completion])
         embedding_user, embedding_bot = embeddings
 
-        # Store in history
         st.session_state['history'].append({
             'user': {
-                'text': user_input,
-                'translated': translated_input,
+                native_lang: user_input,
+                target_lang: translated_input,
                 'embedding': embedding_user,
             },
             'bot': {
-                'text': completion,
-                'translated': completion_translated,
+                native_lang: completion,
+                target_lang: completion_translated,
                 'embedding': embedding_bot,
             }
         })
 
     if st.session_state['history']:
+        view_target = st.checkbox('View in target language')
         for i in range(len(st.session_state['history']) - 1, -1, -1):
             message = st.session_state["history"][i]
-            chat_message(message['bot']['text'], key=f"{i}")
-            chat_message(message['user']['text'], is_user=True, key=f'{i}_user')
+            language = target_lang if view_target else native_lang
+            chat_message(message['bot'][language], key=f"{i}")
+            chat_message(message['user'][language], is_user=True, key=f'{i}_user')
 
 
 if __name__ == '__main__':
