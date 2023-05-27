@@ -1,12 +1,14 @@
-import os
+import time
 
 import anthropic
+import chromadb
 import cohere
 import streamlit as st
+from chromadb.utils import embedding_functions
 from streamlit_chat import message as chat_message
 
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
-COHERE_API_KEY = st.secrets['cohere_api_key']
+ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
+COHERE_API_KEY = st.secrets["cohere_api_key"]
 
 
 def query(prompt):
@@ -51,6 +53,14 @@ def main():
         page_title="Vocava - Demo",
         page_icon=":robot:"
     )
+    client = chromadb.Client()
+    collection = client.get_or_create_collection(
+        name="vocava",
+        embedding_function=embedding_functions.CohereEmbeddingFunction(
+            api_key=COHERE_API_KEY,
+            model_name="embed-multilingual-v2.0",
+        ),
+    )
 
     st.header("Vocava")
 
@@ -72,28 +82,40 @@ def main():
         context += completion
         completion_translated = translate(completion, target_lang, native_lang)
 
-        (
-            embedding_user,
-            embedding_user_translated,
-            embedding_bot,
-            embedding_bot_translated,
-        ) = embed([
+        message_id = int(time.time())
+        ids = [
+            f"{message_id}-user-{native_lang}",
+            f"{message_id}-user-{target_lang}",
+            f"{message_id}-bot-{native_lang}",
+            f"{message_id}-bot-{target_lang}",
+        ]
+        docs = [
             user_input,
             translated_input,
             completion,
             completion_translated,
-        ])
+        ]
+        metadata = [
+            {"language": native_lang},
+            {"language": target_lang},
+            {"language": native_lang},
+            {"language": target_lang},
+        ]
+
+        collection.add(
+            ids=ids,
+            documents=docs,
+            metadatas=metadata,
+        )
 
         st.session_state['history'].append({
             'user': {
                 native_lang: user_input,
                 target_lang: translated_input,
-                'embedding': embedding_user,
             },
             'bot': {
                 native_lang: completion,
                 target_lang: completion_translated,
-                'embedding': embedding_bot,
             }
         })
 
