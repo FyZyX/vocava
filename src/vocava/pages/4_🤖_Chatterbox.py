@@ -39,15 +39,17 @@ def embed(docs: list[str]):
 
 
 def send_message(user_input, native_lang, target_lang, db: storage.VectorStore):
-    model = anthropic.Claude(ANTHROPIC_API_KEY)
-    model = mock.MockLanguageModel()
+    if DEBUG:
+        model = mock.MockLanguageModel()
+        bot = mock.MockLanguageModel()
+    else:
+        model = anthropic.Claude(ANTHROPIC_API_KEY)
+        bot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
+
     translator = translate.Translator(model)
-    bot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
-    bot = mock.MockLanguageModel()
     translation_bot = translate.TranslationLanguageModel(
         bot, translator, native_lang, target_lang, db
     )
-
     completion = translation_bot.generate(user_input)
 
     st.session_state['history'].append(translation_bot.last_translation())
