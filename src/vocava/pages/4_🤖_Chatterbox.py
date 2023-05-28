@@ -1,13 +1,12 @@
 import io
 
-import cohere
 import openai
 import streamlit as st
 from streamlit_chat import message as chat_message
 
 from vocava import translate, storage
-from vocava.st_custom_components import st_audiorec
 from vocava.llm import anthropic, mock
+from vocava.st_custom_components import st_audiorec
 
 DEBUG = True
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
@@ -40,12 +39,7 @@ class User:
             return self._get_audio_transcript()
 
 
-def embed(docs: list[str]):
-    cohere_client = cohere.Client(api_key=COHERE_API_KEY)
-    return cohere_client.embed(texts=docs, model='embed-english')
-
-
-def send_message(user_input, native_lang, target_lang, db: storage.VectorStore):
+def send_message(user_input, native_lang, target_lang):
     if DEBUG:
         model = mock.MockLanguageModel()
         bot = mock.MockLanguageModel()
@@ -54,13 +48,13 @@ def send_message(user_input, native_lang, target_lang, db: storage.VectorStore):
         bot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
 
     translator = translate.Translator(model)
-    translation_bot = translate.TranslationLanguageModel(
-        bot, translator, native_lang, target_lang, db
+    chatterbox = translate.Chatterbox(
+        bot, translator, native_lang, target_lang
     )
-    completion = translation_bot.generate(user_input)
+    interaction = chatterbox.start_interaction(user_input)
 
-    st.session_state['history'].append(translation_bot.last_translation())
-    return completion
+    st.session_state['history'].append(interaction.json())
+    return interaction
 
 
 def get_user_input():
@@ -74,7 +68,12 @@ def get_user_input():
     user = User()
     user_input = user.get_input()
     if user_input:
-        send_message(user_input, native_lang, target_lang, db)
+        interaction = send_message(user_input, native_lang, target_lang)
+        db.save(
+            ids=interaction.ids(),
+            documents=interaction.documents(),
+            metadata=interaction.metadata(),
+        )
 
     view_target = st.checkbox('View in target language')
     language = target_lang if view_target else native_lang

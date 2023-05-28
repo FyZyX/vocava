@@ -1,7 +1,6 @@
 import time
 
 from llm import LanguageModel
-from vocava import storage
 
 
 class Translator:
@@ -14,55 +13,55 @@ class Translator:
         return self._model.generate(prompt)
 
 
-class TranslationLanguageModel:
+class TranslatedInteraction:
+    def __init__(self, documents, start_language, end_language):
+        self._documents = documents
+        self._start_language = start_language
+        self._end_language = end_language
+
+    def ids(self):
+        message_id = int(time.time())
+        return [
+            f"{message_id}-user-{self._start_language}",
+            f"{message_id}-user-{self._end_language}",
+            f"{message_id}-bot-{self._end_language}",
+            f"{message_id}-bot-{self._start_language}",
+        ]
+
+    def documents(self):
+        return self._documents
+
+    def metadata(self):
+        return [
+            {"language": self._start_language},
+            {"language": self._end_language},
+            {"language": self._end_language},
+            {"language": self._start_language},
+        ]
+
+    def json(self):
+        return {
+            'user': {
+                self._start_language: self._documents[0],
+                self._end_language: self._documents[1],
+            },
+            'bot': {
+                self._end_language: self._documents[2],
+                self._start_language: self._documents[3],
+            },
+        }
+
+
+class Chatterbox:
     def __init__(self, model: LanguageModel, translator: Translator,
-                 native_language: str, target_language: str,
-                 db: storage.VectorStore):
+                 native_language: str, target_language: str):
         self._model = model
         self._translator = translator
         self._native_language = native_language
         self._target_language = target_language
         self._last_translation = None
-        self._db = db
 
-    def _interaction_ids(self):
-        message_id = int(time.time())
-        return [
-            f"{message_id}-user-{self._native_language}",
-            f"{message_id}-user-{self._target_language}",
-            f"{message_id}-bot-{self._target_language}",
-            f"{message_id}-bot-{self._native_language}",
-        ]
-
-    def _interaction_metadata(self):
-        return [
-            {"language": self._native_language},
-            {"language": self._target_language},
-            {"language": self._target_language},
-            {"language": self._native_language},
-        ]
-
-    def _save(self, docs):
-        self._db.save(
-            ids=self._interaction_ids(),
-            documents=docs,
-            metadata=self._interaction_metadata(),
-        )
-
-    def last_translation(self):
-        prompt, translated_prompt, translated_response, response = self._last_translation
-        return {
-            'user': {
-                self._native_language: prompt,
-                self._target_language: translated_prompt,
-            },
-            'bot': {
-                self._target_language: translated_response,
-                self._native_language: response,
-            },
-        }
-
-    def generate(self, prompt: str) -> str:
+    def start_interaction(self, prompt: str) -> TranslatedInteraction:
         translated_prompt = self._translator.translate(
             prompt,
             from_language=self._native_language,
@@ -76,6 +75,4 @@ class TranslationLanguageModel:
         )
 
         docs = [prompt, translated_prompt, translated_response, response]
-        self._save(docs)
-        self._last_translation = docs
-        return translated_response
+        return TranslatedInteraction(docs, self._native_language, self._target_language)
