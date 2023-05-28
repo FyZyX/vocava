@@ -54,7 +54,53 @@ def embed(docs: list[str]):
 
 
 def get_text(default):
-    return st.text_input("You: ", default, key="input")
+    return st.text_input("You: ", default)
+
+
+def send_message(context, user_input, native_lang, target_lang, collection):
+    translated_input = translate(user_input, native_lang, target_lang)
+    context += chat_prompt(translated_input)
+
+    completion = query(prompt=context)
+    context += completion
+    completion_translated = translate(completion, target_lang, native_lang)
+
+    message_id = int(time.time())
+    ids = [
+        f"{message_id}-user-{native_lang}",
+        f"{message_id}-user-{target_lang}",
+        f"{message_id}-bot-{native_lang}",
+        f"{message_id}-bot-{target_lang}",
+    ]
+    docs = [
+        user_input,
+        translated_input,
+        completion,
+        completion_translated,
+    ]
+    metadata = [
+        {"language": native_lang},
+        {"language": target_lang},
+        {"language": native_lang},
+        {"language": target_lang},
+    ]
+
+    collection.add(
+        ids=ids,
+        documents=docs,
+        metadatas=metadata,
+    )
+
+    st.session_state['history'].append({
+        'user': {
+            native_lang: user_input,
+            target_lang: translated_input,
+        },
+        'bot': {
+            native_lang: completion,
+            target_lang: completion_translated,
+        }
+    })
 
 
 def main():
@@ -80,63 +126,21 @@ def main():
     if 'history' not in st.session_state:
         st.session_state['history'] = []
 
-    default_user_input = ""
-
-    wav_audio_data = st_audiorec()
-    if wav_audio_data is not None:
-        file = io.BytesIO(wav_audio_data)
-        file.name = "tmp.wav"
-        with st.spinner():
-            response = openai.Audio.transcribe("whisper-1", file)
-            default_user_input = response["text"]
-
-    user_input = get_text(default_user_input)
-
     context = ""
-    if st.button("Send"):
-        translated_input = translate(user_input, native_lang, target_lang)
-        context += chat_prompt(translated_input)
-
-        completion = query(prompt=context)
-        context += completion
-        completion_translated = translate(completion, target_lang, native_lang)
-
-        message_id = int(time.time())
-        ids = [
-            f"{message_id}-user-{native_lang}",
-            f"{message_id}-user-{target_lang}",
-            f"{message_id}-bot-{native_lang}",
-            f"{message_id}-bot-{target_lang}",
-        ]
-        docs = [
-            user_input,
-            translated_input,
-            completion,
-            completion_translated,
-        ]
-        metadata = [
-            {"language": native_lang},
-            {"language": target_lang},
-            {"language": native_lang},
-            {"language": target_lang},
-        ]
-
-        collection.add(
-            ids=ids,
-            documents=docs,
-            metadatas=metadata,
-        )
-
-        st.session_state['history'].append({
-            'user': {
-                native_lang: user_input,
-                target_lang: translated_input,
-            },
-            'bot': {
-                native_lang: completion,
-                target_lang: completion_translated,
-            }
-        })
+    input_method = st.radio("Input method", ("Text Input", "Voice Input"))
+    if input_method == "Text Input":
+        user_input = get_text("")
+        if st.button("Send"):
+            send_message(context, user_input, native_lang, target_lang, collection)
+    elif input_method == "Voice Input":
+        wav_audio_data = st_audiorec()
+        if wav_audio_data is not None:
+            file = io.BytesIO(wav_audio_data)
+            file.name = "tmp.wav"
+            with st.spinner():
+                response = openai.Audio.transcribe("whisper-1", file)
+                user_input = response["text"]
+                send_message(context, user_input, native_lang, target_lang, collection)
 
     if st.session_state['history']:
         view_target = st.checkbox('View in target language')
