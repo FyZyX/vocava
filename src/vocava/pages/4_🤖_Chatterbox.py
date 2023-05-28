@@ -17,11 +17,11 @@ openai.api_key = st.secrets["openai_api_key"]
 
 class User:
     @staticmethod
-    def get_text(default=""):
+    def _get_text(default=""):
         return st.text_input("Enter a Message", default)
 
     @staticmethod
-    def get_audio_transcript():
+    def _get_audio_transcript():
         data = st_audiorec()
         if not data:
             return None
@@ -31,6 +31,13 @@ class User:
         with st.spinner():
             response = openai.Audio.transcribe("whisper-1", file)
         return response["text"]
+
+    def get_input(self):
+        input_method = st.radio("Input method", ("Text Input", "Voice Input"))
+        if input_method == "Text Input":
+            return self._get_text()
+        elif input_method == "Voice Input":
+            return self._get_audio_transcript()
 
 
 def embed(docs: list[str]):
@@ -65,15 +72,9 @@ def get_user_input():
     target_lang = col2.text_input("Your target language: ", "fr")
 
     user = User()
-    input_method = st.radio("Input method", ("Text Input", "Voice Input"))
-    if input_method == "Text Input":
-        user_input = user.get_text()
-        if user_input:
-            send_message(user_input, native_lang, target_lang, db)
-    elif input_method == "Voice Input":
-        user_input = user.get_audio_transcript()
-        if user_input:
-            send_message(user_input, native_lang, target_lang, db)
+    user_input = user.get_input()
+    if user_input:
+        send_message(user_input, native_lang, target_lang, db)
 
     view_target = st.checkbox('View in target language')
     language = target_lang if view_target else native_lang
@@ -88,11 +89,6 @@ def render_chat_history(language):
 
 
 def main():
-    st.set_page_config(
-        page_title="Vocava - Demo",
-        page_icon=":robot:"
-    )
-
     st.header("Vocava")
 
     if 'history' not in st.session_state:
