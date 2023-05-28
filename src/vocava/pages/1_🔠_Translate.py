@@ -1,14 +1,11 @@
 import pathlib
 import sys
 
-import openai
 import streamlit as st
 
 from vocava.llm import LanguageModel, anthropic, mock
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
-COHERE_API_KEY = st.secrets["cohere_api_key"]
-openai.api_key = st.secrets["openai_api_key"]
 
 
 class Translator:
@@ -30,7 +27,7 @@ def translation_page():
 
     text_to_translate = st.text_area("Enter text to translate")
     if st.button("Translate"):
-        # model = anthropic.Claude(ANTHROPIC_API_KEY)
+        model = anthropic.Claude(ANTHROPIC_API_KEY)
         model = mock.MockLanguageModel()
         translator = Translator(model)
         with st.spinner():
