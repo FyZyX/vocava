@@ -7,13 +7,13 @@ class Claude:
 
     @staticmethod
     def _wrap_prompt(text):
-        return anthropic.HUMAN_PROMPT + text + anthropic.AI_PROMPT
+        return f"{anthropic.HUMAN_PROMPT} {text}{anthropic.AI_PROMPT}"
 
     def generate(self, prompt: str) -> str:
         return self._client.completion(
             prompt=self._wrap_prompt(prompt),
             stop_sequences=[anthropic.HUMAN_PROMPT],
-            model="claude-v1.3-100k",
+            model="claude-v1-100k",
             max_tokens_to_sample=200,
         )["completion"]
 
@@ -28,9 +28,8 @@ class ClaudeChatBot(Claude):
         response = self._client.completion(
             prompt=self._history,
             stop_sequences=[anthropic.HUMAN_PROMPT],
-            model="claude-v1.3-100k",
+            model="claude-v1-100k",
             max_tokens_to_sample=200,
         )["completion"]
-        self._history += response
+        self._history += f" {response}"
         return response
-
