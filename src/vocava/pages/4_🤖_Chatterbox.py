@@ -1,12 +1,14 @@
 import io
+import time
 
 import openai
 import streamlit as st
 from streamlit_chat import message as chat_message
 
 from vocava import translate, storage
-from vocava.llm import anthropic, mock
+from vocava.llm import anthropic, mock, LanguageModel
 from vocava.st_custom_components import st_audiorec
+from vocava.translate import Translator
 
 DEBUG = True
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
@@ -39,63 +41,130 @@ class User:
             return self._get_audio_transcript()
 
 
-def send_message(user_input, native_lang, target_lang):
+class Interaction:
+    def __init__(self, documents, start_language, end_language):
+        self._documents = documents
+        self._start_language = start_language
+        self._end_language = end_language
+
+    def ids(self):
+        message_id = int(time.time())
+        return [
+            f"{message_id}-user-{self._start_language}",
+            f"{message_id}-user-{self._end_language}",
+            f"{message_id}-bot-{self._end_language}",
+            f"{message_id}-bot-{self._start_language}",
+        ]
+
+    def documents(self):
+        return self._documents
+
+    def metadata(self):
+        return [
+            {"language": self._start_language},
+            {"language": self._end_language},
+            {"language": self._end_language},
+            {"language": self._start_language},
+        ]
+
+    def json(self):
+        return {
+            'user': {
+                self._start_language: self._documents[0],
+                self._end_language: self._documents[1],
+            },
+            'bot': {
+                self._end_language: self._documents[2],
+                self._start_language: self._documents[3],
+            },
+        }
+
+
+class Chatterbox:
+    def __init__(self, user: User, user_language: str,
+                 bot: LanguageModel, bot_language: str,
+                 translator: Translator):
+        self._user = user
+        self._user_language = user_language
+        self._bot = bot
+        self._bot_language = bot_language
+        self._translator = translator
+        # conversation is a series of interactions
+        self._conversation = []
+
+    def _send_message(self, prompt: str) -> Interaction:
+        translated_prompt = self._translator.translate(
+            prompt,
+            from_language=self._user_language,
+            to_language=self._bot_language,
+        )
+        translated_response = self._bot.generate(translated_prompt)
+        response = self._translator.translate(
+            translated_response,
+            from_language=self._user_language,
+            to_language=self._bot_language,
+        )
+
+        docs = [prompt, translated_prompt, translated_response, response]
+        interaction = Interaction(
+            docs, self._user_language, self._bot_language
+        )
+        st.session_state['history'].append(interaction.json())
+        return interaction
+
+    def start_interaction(self):
+        user_input = self._user.get_input()
+        if user_input:
+            return self._send_message(user_input)
+
+    def render_chat_history(self):
+        if not st.session_state['history']:
+            return
+
+        view_native = st.checkbox('View in native language')
+        language = self._user_language if view_native else self._bot_language
+        for i in range(len(st.session_state['history']) - 1, -1, -1):
+            message = st.session_state["history"][i]
+            chat_message(message['bot'][language], key=f"{i}")
+            chat_message(message['user'][language], is_user=True, key=f'{i}_user')
+
+
+def main():
+    st.header("Vocava")
+
+    col1, col2 = st.columns(2)
+    native_lang = col1.text_input("Your native language: ", "en")
+    target_lang = col2.text_input("Your target language: ", "fr")
+
+    if 'history' not in st.session_state:
+        st.session_state['history'] = []
+
+    user = User()
     if DEBUG:
         model = mock.MockLanguageModel()
         bot = mock.MockLanguageModel()
     else:
         model = anthropic.Claude(ANTHROPIC_API_KEY)
         bot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
-
     translator = translate.Translator(model)
-    chatterbox = translate.Chatterbox(
-        bot, translator, native_lang, target_lang
-    )
-    interaction = chatterbox.start_interaction(user_input)
 
-    st.session_state['history'].append(interaction.json())
-    return interaction
-
-
-def get_user_input():
     db = storage.VectorStore(COHERE_API_KEY)
     db.connect()
 
-    col1, col2 = st.columns(2)
-    native_lang = col1.text_input("Your native language: ", "en")
-    target_lang = col2.text_input("Your target language: ", "fr")
+    chatterbox = Chatterbox(
+        user=user,
+        user_language=native_lang,
+        bot=bot,
+        bot_language=target_lang,
+        translator=translator,
+    )
+    interaction = chatterbox.start_interaction()
 
-    user = User()
-    user_input = user.get_input()
-    if user_input:
-        interaction = send_message(user_input, native_lang, target_lang)
-        db.save(
-            ids=interaction.ids(),
-            documents=interaction.documents(),
-            metadata=interaction.metadata(),
-        )
-
-    view_target = st.checkbox('View in target language')
-    language = target_lang if view_target else native_lang
-    return language
-
-
-def render_chat_history(language):
-    for i in range(len(st.session_state['history']) - 1, -1, -1):
-        message = st.session_state["history"][i]
-        chat_message(message['bot'][language], key=f"{i}")
-        chat_message(message['user'][language], is_user=True, key=f'{i}_user')
-
-
-def main():
-    st.header("Vocava")
-
-    if 'history' not in st.session_state:
-        st.session_state['history'] = []
-
-    view_language = get_user_input()
-    if st.session_state['history']:
-        render_chat_history(view_language)
+    db.save(
+        ids=interaction.ids(),
+        documents=interaction.documents(),
+        metadata=interaction.metadata(),
+    )
 
 
 if __name__ == '__main__':
