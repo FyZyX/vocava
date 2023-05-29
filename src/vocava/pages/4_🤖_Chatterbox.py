@@ -111,7 +111,7 @@ class Chatterbox:
         st.session_state['history'].append(interaction.json())
         return interaction
 
-    def start_interaction(self):
+    def start_interaction(self) -> Interaction | None:
         user_input = self._user.get_input()
         if user_input:
             return self._send_message(user_input)
@@ -138,7 +138,7 @@ def main():
         st.session_state['history'] = []
 
     user = User()
-    if st.checkbox("DEBUG Mode"):
+    if st.checkbox("DEBUG Mode", value=True):
         model = mock.MockLanguageModel()
         bot = mock.MockLanguageModel()
     else:
@@ -158,12 +158,12 @@ def main():
         translator=translator,
     )
     interaction = chatterbox.start_interaction()
-
-    db.save(
-        ids=interaction.ids(),
-        documents=interaction.documents(),
-        metadata=interaction.metadata(),
-    )
+    if interaction:
+        db.save(
+            ids=interaction.ids(),
+            documents=interaction.documents(),
+            metadata=interaction.metadata(),
+        )
 
 
 if __name__ == '__main__':
