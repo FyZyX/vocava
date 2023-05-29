@@ -1,18 +1,15 @@
 import json
 
 import requests
-import streamlit
-
-API_KEY = streamlit.secrets["newsdata_api_key"]
 
 
-def make_request(language="en"):
+def get_news(api_key: str, query: str, language: str = "en"):
     url = f"https://newsdata.io/api/1/news"
     headers = {
-        "X-ACCESS-KEY": API_KEY,
+        "X-ACCESS-KEY": api_key,
     }
     params = {
-        "q": "ai",
+        "q": query,
         "language": language,
     }
 
