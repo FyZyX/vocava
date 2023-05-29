@@ -10,7 +10,6 @@ from vocava.llm import anthropic, mock, LanguageModel
 from vocava.st_custom_components import st_audiorec
 from vocava.translate import Translator
 
-DEBUG = True
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
 openai.api_key = st.secrets["openai_api_key"]
@@ -132,10 +131,6 @@ class Chatterbox:
 def main():
     st.header("Vocava")
 
-    col1, col2 = st.columns(2)
-    native_lang = col1.text_input("Your native language: ", "en")
-    target_lang = col2.text_input("Your target language: ", "fr")
-
     db = storage.VectorStore(COHERE_API_KEY)
     db.connect()
 
@@ -143,13 +138,17 @@ def main():
         st.session_state['history'] = []
 
     user = User()
-    if DEBUG:
+    if st.checkbox("DEBUG Mode"):
         model = mock.MockLanguageModel()
         bot = mock.MockLanguageModel()
     else:
         model = anthropic.Claude(ANTHROPIC_API_KEY)
         bot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
     translator = translate.Translator(model)
+
+    col1, col2 = st.columns(2)
+    native_lang = col1.text_input("Your native language: ", "en")
+    target_lang = col2.text_input("Your target language: ", "fr")
 
     chatterbox = Chatterbox(
         user=user,
