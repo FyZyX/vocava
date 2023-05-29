@@ -21,9 +21,17 @@ def main():
     text_to_translate = st.text_area("Enter text to translate")
     if st.button("Translate"):
         with st.spinner():
-            translated_text = translator.translate(text_to_translate, from_lang, to_lang)
+            data = translator.translate(
+                text_to_translate,
+                from_lang,
+                to_lang,
+            )
         st.divider()
-        st.text_area("Translated Text", translated_text)
+
+        translation = data["translation"]
+        explanation = data["explanation"]
+        st.text_area("Translated Text", translation)
+        st.info(explanation)
 
 
 if __name__ == "__main__":
