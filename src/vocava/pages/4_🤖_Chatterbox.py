@@ -32,8 +32,7 @@ class User:
             response = openai.Audio.transcribe("whisper-1", file)
         return response["text"]
 
-    def get_input(self):
-        input_method = st.radio("Input method", ("Text Input", "Voice Input"))
+    def get_input(self, input_method):
         if input_method == "Text Input":
             return self._get_text()
         elif input_method == "Voice Input":
@@ -112,8 +111,8 @@ class Chatterbox:
         self._interactions.append(interaction.json())
         return interaction
 
-    def start_interaction(self) -> Interaction | None:
-        user_input = self._user.get_input()
+    def start_interaction(self, input_method) -> Interaction | None:
+        user_input = self._user.get_input(input_method)
         if not user_input:
             return None
 
@@ -137,7 +136,7 @@ def main():
     db.connect()
 
     user = User()
-    if st.checkbox("DEBUG Mode", value=True):
+    if st.sidebar.checkbox("DEBUG Mode", value=True):
         model = mock.MockLanguageModel()
         bot = mock.MockLanguageModel()
     else:
@@ -145,11 +144,10 @@ def main():
         bot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
     translator = translate.Translator(model)
 
-    cols = st.columns(2)
-    with cols[0]:
-        from_lang = st.text_input("From Language", "en")
-    with cols[1]:
-        to_lang = st.text_input("To Language", "fr")
+    from_lang = st.sidebar.text_input("Native Language", "en")
+    to_lang = st.sidebar.text_input("Chatterbox Language", "fr")
+    input_method = st.sidebar.radio("Input method", ("Text Input", "Voice Input"))
+    view_native = st.sidebar.checkbox("View in native language")
 
     chatterbox = Chatterbox(
         user=user,
@@ -159,12 +157,11 @@ def main():
         translator=translator,
     )
     with st.spinner():
-        interaction = chatterbox.start_interaction()
+        interaction = chatterbox.start_interaction(input_method)
 
     if interaction:
         db.save_interaction(interaction)
 
-    view_native = st.checkbox("View in native language")
     language = from_lang if view_native else to_lang
 
     for i, interaction in enumerate(chatterbox.interactions()):
