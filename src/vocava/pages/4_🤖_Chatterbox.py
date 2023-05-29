@@ -136,6 +136,9 @@ def main():
     native_lang = col1.text_input("Your native language: ", "en")
     target_lang = col2.text_input("Your target language: ", "fr")
 
+    db = storage.VectorStore(COHERE_API_KEY)
+    db.connect()
+
     if 'history' not in st.session_state:
         st.session_state['history'] = []
 
@@ -147,9 +150,6 @@ def main():
         model = anthropic.Claude(ANTHROPIC_API_KEY)
         bot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
     translator = translate.Translator(model)
-
-    db = storage.VectorStore(COHERE_API_KEY)
-    db.connect()
 
     chatterbox = Chatterbox(
         user=user,

@@ -3,19 +3,10 @@ import sys
 
 import streamlit as st
 
-from vocava.llm import LanguageModel, anthropic, mock
+from vocava.llm import anthropic, mock
+from vocava.translate import Translator
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
-
-
-class Translator:
-    def __init__(self, model: LanguageModel):
-        self._model = model
-
-    def translate(self, text: str, from_language, to_language) -> str:
-        prompt = f"Translate the TEXT from {from_language} to {to_language}\n" \
-                 f"TEXT:\n\"{text}\""
-        return self._model.generate(prompt)
 
 
 def translation_page():
