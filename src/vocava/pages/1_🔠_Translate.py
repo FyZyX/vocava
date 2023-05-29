@@ -9,17 +9,14 @@ ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 def main():
     st.title('Translation')
 
-    if st.checkbox("DEBUG Mode", value=True):
+    if st.sidebar.checkbox("DEBUG Mode", value=True):
         model = mock.MockLanguageModel()
     else:
         model = anthropic.Claude(ANTHROPIC_API_KEY)
     translator = Translator(model)
 
-    cols = st.columns(2)
-    with cols[0]:
-        from_lang = st.text_input("From Language", "en")
-    with cols[1]:
-        to_lang = st.text_input("To Language", "fr")
+    from_lang = st.sidebar.text_input("From Language", "en")
+    to_lang = st.sidebar.text_input("To Language", "fr")
 
     text_to_translate = st.text_area("Enter text to translate")
     if st.button("Translate"):
