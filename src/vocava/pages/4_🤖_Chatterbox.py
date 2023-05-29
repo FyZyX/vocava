@@ -145,15 +145,17 @@ def main():
         bot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
     translator = translate.Translator(model)
 
-    col1, col2 = st.columns(2)
-    native_lang = col1.text_input("Your native language: ", "en")
-    target_lang = col2.text_input("Your target language: ", "fr")
+    cols = st.columns(2)
+    with cols[0]:
+        from_lang = st.text_input("From Language", "en")
+    with cols[1]:
+        to_lang = st.text_input("To Language", "fr")
 
     chatterbox = Chatterbox(
         user=user,
-        user_language=native_lang,
+        user_language=from_lang,
         bot=bot,
-        bot_language=target_lang,
+        bot_language=to_lang,
         translator=translator,
     )
     interaction = chatterbox.start_interaction()

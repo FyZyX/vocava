@@ -15,9 +15,11 @@ def main():
         model = anthropic.Claude(ANTHROPIC_API_KEY)
     translator = Translator(model)
 
-    col1, col2 = st.columns(2)
-    from_lang = col1.text_input("From Language", "en")
-    to_lang = col2.text_input("To Language", "fr")
+    cols = st.columns(2)
+    with cols[0]:
+        from_lang = st.text_input("From Language", "en")
+    with cols[1]:
+        to_lang = st.text_input("To Language", "fr")
 
     text_to_translate = st.text_area("Enter text to translate")
     if st.button("Translate"):
