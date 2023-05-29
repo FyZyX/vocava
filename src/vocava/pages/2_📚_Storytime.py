@@ -30,7 +30,10 @@ class Storyteller:
 
 
 def main():
-    st.title('Storyteller')
+    if "data" not in st.session_state:
+        st.session_state["data"] = None
+
+    st.title("Storyteller")
 
     if st.sidebar.checkbox("DEBUG Mode", value=True):
         model = mock.MockLanguageModel()
@@ -45,13 +48,22 @@ def main():
         storyteller = Storyteller(model)
         with st.spinner():
             data = storyteller.generate_story(language, fluency, user_prompt)
-        generated_story = data["story"]
-        comprehension_questions = data["questions"]
-        st.markdown(generated_story)
-        for i, item in enumerate(comprehension_questions):
+        st.session_state["data"] = data
+
+    if not st.session_state["data"]:
+        return
+
+    generated_story = st.session_state["data"]["story"]
+    comprehension_questions = st.session_state["data"]["questions"]
+    st.markdown(generated_story)
+    for i, item in enumerate(comprehension_questions):
+        cols = st.columns(2)
+        with cols[0]:
             st.write(item["question"])
-            if st.checkbox("Show Answer", key=f"q{i}"):
-                st.success(item["answer"])
+        with cols[1]:
+            show_answer = st.checkbox("Show Answer", key=f"q{i}")
+        if show_answer:
+            st.success(item["answer"])
 
 
 if __name__ == "__main__":
