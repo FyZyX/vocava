@@ -1,7 +1,7 @@
 import streamlit as st
 
 from vocava.llm import anthropic, mock
-from vocava.translate import Translator
+from vocava.translate import LANGUAGES, Translator
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
@@ -15,16 +15,16 @@ def main():
         model = anthropic.Claude(ANTHROPIC_API_KEY)
     translator = Translator(model)
 
-    from_lang = st.sidebar.text_input("From Language", "en")
-    to_lang = st.sidebar.text_input("To Language", "fr")
+    from_lang = st.sidebar.selectbox("From Language", options=LANGUAGES)
+    to_lang = st.sidebar.selectbox("To Language", options=LANGUAGES, index=4)
 
     text_to_translate = st.text_area("Enter text to translate")
     if st.button("Translate"):
         with st.spinner():
             data = translator.translate(
                 text_to_translate,
-                from_lang,
-                to_lang,
+                LANGUAGES[from_lang]["name"],
+                LANGUAGES[to_lang]["name"],
             )
         st.divider()
 
