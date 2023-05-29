@@ -1,43 +1,57 @@
+import json
+from typing import Any
+
 import streamlit as st
 
 from vocava.llm import LanguageModel, anthropic, mock
+from vocava.llm.prompt import load_prompt
+from vocava.translate import LANGUAGES
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
 
-class StoryGenerator:
+class Storyteller:
     def __init__(self, model: LanguageModel):
         self._model = model
 
-    def generate_story(self, prompt: str) -> str:
-        # Extend this method to generate a short story based on the prompt
-        return self._model.generate(prompt)
-
-
-class ComprehensionTester:
-    def __init__(self, model: LanguageModel):
-        self._model = model
-
-    def generate_questions(self, text: str) -> str:
-        # Extend this method to generate comprehension questions based on the text
-        return self._model.generate(
-            f"Generate comprehension questions for the following text:\n{text}")
+    def generate_story(self, language: str, fluency: int,
+                       concept: str) -> dict[str, Any]:
+        prompt = load_prompt(
+            "storytime-generate",
+            language=language,
+            fluency=fluency,
+            concept=concept,
+        )
+        response = self._model.generate(prompt, max_tokens=1_000)
+        try:
+            return json.loads(response)
+        except json.decoder.JSONDecodeError:
+            st.write(response)
 
 
 def main():
     st.title('Storyteller')
 
-    user_prompt = st.text_input("Enter a prompt for a story")
-    if st.button("Generate Story"):
-        model = anthropic.Claude(ANTHROPIC_API_KEY)
+    if st.sidebar.checkbox("DEBUG Mode", value=True):
         model = mock.MockLanguageModel()
-        story_gen = StoryGenerator(model)
-        generated_story = story_gen.generate_story(user_prompt)
-        st.text_area("Generated Story", generated_story)
+    else:
+        model = anthropic.Claude(ANTHROPIC_API_KEY)
 
-        tester = ComprehensionTester(model)
-        comprehension_questions = tester.generate_questions(generated_story)
-        st.text_area("Comprehension Questions", comprehension_questions)
+    language = st.sidebar.selectbox("Choose Language", options=LANGUAGES, index=12)
+    fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
+
+    user_prompt = st.text_input("What kind of story would you like?")
+    if st.button("Generate Story"):
+        storyteller = Storyteller(model)
+        with st.spinner():
+            data = storyteller.generate_story(language, fluency, user_prompt)
+        generated_story = data["story"]
+        comprehension_questions = data["questions"]
+        st.markdown(generated_story)
+        for i, item in enumerate(comprehension_questions):
+            st.write(item["question"])
+            if st.checkbox("Show Answer", key=f"q{i}"):
+                st.success(item["answer"])
 
 
 if __name__ == "__main__":

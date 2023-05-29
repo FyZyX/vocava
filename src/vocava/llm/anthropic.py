@@ -9,12 +9,12 @@ class Claude:
     def _wrap_prompt(text):
         return f"{anthropic.HUMAN_PROMPT} {text}{anthropic.AI_PROMPT}"
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, max_tokens=200) -> str:
         return self._client.completion(
             prompt=self._wrap_prompt(prompt),
             stop_sequences=[anthropic.HUMAN_PROMPT],
             model="claude-v1-100k",
-            max_tokens_to_sample=200,
+            max_tokens_to_sample=max_tokens,
         )["completion"]
 
 
@@ -23,13 +23,13 @@ class ClaudeChatBot(Claude):
         super().__init__(api_key)
         self._history = ""
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, max_tokens=200) -> str:
         self._history += self._wrap_prompt(prompt)
         response = self._client.completion(
             prompt=self._history,
             stop_sequences=[anthropic.HUMAN_PROMPT],
             model="claude-v1-100k",
-            max_tokens_to_sample=200,
+            max_tokens_to_sample=max_tokens,
         )["completion"]
         self._history += f" {response}"
         return response
