@@ -40,9 +40,5 @@ def storyteller_page():
         st.text_area("Comprehension Questions", comprehension_questions)
 
 
-def main():
-    storyteller_page()
-
-
 if __name__ == "__main__":
-    main()
+    storyteller_page()
