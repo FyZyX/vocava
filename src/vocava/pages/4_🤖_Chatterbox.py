@@ -129,7 +129,7 @@ class Chatterbox:
 
 
 def main():
-    st.header("Vocava")
+    st.header("Chatterbox")
 
     db = storage.VectorStore(COHERE_API_KEY)
     db.connect()
