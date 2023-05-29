@@ -114,6 +114,8 @@ class Chatterbox:
 
     def start_interaction(self) -> Interaction | None:
         user_input = self._user.get_input()
+        if not user_input:
+            return None
 
         # streamlit rerender hack
         skip = False
@@ -121,7 +123,7 @@ class Chatterbox:
             last_input = self._interactions[-1]["user"][self._user_language]
             skip = user_input == last_input
 
-        if user_input and not skip:
+        if not skip:
             return self._send_message(user_input)
 
     def interactions(self):
