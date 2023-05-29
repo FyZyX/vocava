@@ -88,10 +88,9 @@ class Chatterbox:
         self._bot = bot
         self._bot_language = bot_language
         self._translator = translator
-        # conversation is a series of interactions
         if "history" not in st.session_state:
             st.session_state["history"] = []
-        self._conversation = st.session_state["history"]
+        self._interactions = st.session_state["history"]
 
     def _send_message(self, prompt: str) -> Interaction:
         translated_prompt = self._translator.translate(
@@ -110,24 +109,23 @@ class Chatterbox:
         interaction = Interaction(
             docs, self._user_language, self._bot_language
         )
-        self._conversation.append(interaction.json())
+        self._interactions.append(interaction.json())
         return interaction
 
     def start_interaction(self) -> Interaction | None:
         user_input = self._user.get_input()
-        if user_input:
+
+        # streamlit rerender hack
+        skip = False
+        if len(self._interactions) > 0:
+            last_input = self._interactions[-1]["user"][self._user_language]
+            skip = user_input == last_input
+
+        if user_input and not skip:
             return self._send_message(user_input)
 
-    def render_chat_history(self):
-        if not st.session_state["history"]:
-            return
-
-        view_native = st.checkbox("View in native language")
-        language = self._user_language if view_native else self._bot_language
-        for i in range(len(self._conversation) - 1, -1, -1):
-            message = self._conversation[i]
-            chat_message(message["bot"][language], key=f"{i}")
-            chat_message(message["user"][language], is_user=True, key=f"{i}_user")
+    def interactions(self):
+        return self._interactions[::-1]
 
 
 def main():
@@ -158,9 +156,18 @@ def main():
         bot_language=to_lang,
         translator=translator,
     )
-    interaction = chatterbox.start_interaction()
+    with st.spinner():
+        interaction = chatterbox.start_interaction()
+
     if interaction:
         db.save_interaction(interaction)
+
+    view_native = st.checkbox("View in native language")
+    language = from_lang if view_native else to_lang
+
+    for i, interaction in enumerate(chatterbox.interactions()):
+        chat_message(interaction["bot"][language], key=f"{i}")
+        chat_message(interaction["user"][language], is_user=True, key=f"{i}_user")
 
 
 if __name__ == "__main__":

@@ -14,18 +14,18 @@ class VectorStore:
         self._collection: chromadb.api.Collection | None = None
 
     def connect(self) -> bool:
-        if not self._collection:
-            return False
-
         self._collection = self._db.get_or_create_collection(
             name="vocava",
             embedding_function=self._embedding_function,
         )
-        return True
 
-    def save_interaction(self, interaction):
+    def save_interaction(self, interaction) -> bool:
+        if not self._collection:
+            return False
+
         self._collection.add(
             ids=interaction.ids(),
             documents=interaction.documents(),
             metadatas=interaction.metadata(),
         )
+        return True
