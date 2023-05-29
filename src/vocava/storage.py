@@ -6,20 +6,26 @@ class VectorStore:
     def __init__(self, cohere_api_key):
         self._cohere_api_key = cohere_api_key
         self._db = chromadb.Client()
-        self._collection = None
+        embed = chromadb.utils.embedding_functions.CohereEmbeddingFunction
+        self._embedding_function = embed(
+            api_key=self._cohere_api_key,
+            model_name="embed-multilingual-v2.0",
+        )
+        self._collection: chromadb.api.Collection | None = None
 
-    def connect(self):
+    def connect(self) -> bool:
+        if not self._collection:
+            return False
+
         self._collection = self._db.get_or_create_collection(
             name="vocava",
-            embedding_function=embedding_functions.CohereEmbeddingFunction(
-                api_key=self._cohere_api_key,
-                model_name="embed-multilingual-v2.0",
-            ),
+            embedding_function=self._embedding_function,
         )
+        return True
 
-    def save(self, ids, documents, metadata):
+    def save_interaction(self, interaction):
         self._collection.add(
-            ids=ids,
-            documents=documents,
-            metadatas=metadata,
+            ids=interaction.ids(),
+            documents=interaction.documents(),
+            metadatas=interaction.metadata(),
         )

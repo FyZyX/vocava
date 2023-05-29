@@ -68,11 +68,11 @@ class Interaction:
 
     def json(self):
         return {
-            'user': {
+            "user": {
                 self._start_language: self._documents[0],
                 self._end_language: self._documents[1],
             },
-            'bot': {
+            "bot": {
                 self._end_language: self._documents[2],
                 self._start_language: self._documents[3],
             },
@@ -89,7 +89,9 @@ class Chatterbox:
         self._bot_language = bot_language
         self._translator = translator
         # conversation is a series of interactions
-        self._conversation = []
+        if "history" not in st.session_state:
+            st.session_state["history"] = []
+        self._conversation = st.session_state["history"]
 
     def _send_message(self, prompt: str) -> Interaction:
         translated_prompt = self._translator.translate(
@@ -108,7 +110,7 @@ class Chatterbox:
         interaction = Interaction(
             docs, self._user_language, self._bot_language
         )
-        st.session_state['history'].append(interaction.json())
+        self._conversation.append(interaction.json())
         return interaction
 
     def start_interaction(self) -> Interaction | None:
@@ -117,15 +119,15 @@ class Chatterbox:
             return self._send_message(user_input)
 
     def render_chat_history(self):
-        if not st.session_state['history']:
+        if not st.session_state["history"]:
             return
 
-        view_native = st.checkbox('View in native language')
+        view_native = st.checkbox("View in native language")
         language = self._user_language if view_native else self._bot_language
-        for i in range(len(st.session_state['history']) - 1, -1, -1):
-            message = st.session_state["history"][i]
-            chat_message(message['bot'][language], key=f"{i}")
-            chat_message(message['user'][language], is_user=True, key=f'{i}_user')
+        for i in range(len(self._conversation) - 1, -1, -1):
+            message = self._conversation[i]
+            chat_message(message["bot"][language], key=f"{i}")
+            chat_message(message["user"][language], is_user=True, key=f"{i}_user")
 
 
 def main():
@@ -133,9 +135,6 @@ def main():
 
     db = storage.VectorStore(COHERE_API_KEY)
     db.connect()
-
-    if 'history' not in st.session_state:
-        st.session_state['history'] = []
 
     user = User()
     if st.checkbox("DEBUG Mode", value=True):
@@ -159,12 +158,8 @@ def main():
     )
     interaction = chatterbox.start_interaction()
     if interaction:
-        db.save(
-            ids=interaction.ids(),
-            documents=interaction.documents(),
-            metadata=interaction.metadata(),
-        )
+        db.save_interaction(interaction)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
