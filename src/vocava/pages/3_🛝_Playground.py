@@ -50,7 +50,7 @@ def speech_exercise():
             # on the user's pronunciation here
 
 
-def playground_page():
+def main():
     st.title('Playground')
 
     activities = {
@@ -66,4 +66,4 @@ def playground_page():
 
 
 if __name__ == "__main__":
-    playground_page()
+    main()

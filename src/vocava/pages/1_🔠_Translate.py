@@ -1,6 +1,3 @@
-import pathlib
-import sys
-
 import streamlit as st
 
 from vocava.llm import anthropic, mock
@@ -9,7 +6,7 @@ from vocava.translate import Translator
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
 
-def translation_page():
+def main():
     st.title('Translation')
 
     col1, col2 = st.columns(2)
@@ -28,5 +25,4 @@ def translation_page():
 
 
 if __name__ == "__main__":
-    sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
-    translation_page()
+    main()

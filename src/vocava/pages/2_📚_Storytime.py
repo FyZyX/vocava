@@ -24,7 +24,7 @@ class ComprehensionTester:
             f"Generate comprehension questions for the following text:\n{text}")
 
 
-def storyteller_page():
+def main():
     st.title('Storyteller')
 
     user_prompt = st.text_input("Enter a prompt for a story")
@@ -41,4 +41,4 @@ def storyteller_page():
 
 
 if __name__ == "__main__":
-    storyteller_page()
+    main()
