@@ -25,6 +25,10 @@ USER_VOCABULARY = {
         "sore wa totemo oishii desu": ["that is very tasty"],
     }
 }
+USER_PHRASES = {
+    "Japanese": {
+    }
+}
 
 
 class Playground:
@@ -63,6 +67,23 @@ class Playground:
         except json.decoder.JSONDecodeError:
             st.write(response)
 
+    def generate_grammar_practice(self, native_language, target_language,
+                                  fluency, known_phrases):
+        prompt = load_prompt(
+            "playground-generate-grammar-practice",
+            native_language=native_language,
+            target_language=target_language,
+            fluency=fluency,
+            known_phrases=known_phrases,
+        )
+        response = self._model.generate(prompt, max_tokens=500)
+        try:
+            start = response.find("{")
+            payload = response[start:]
+            return json.loads(payload)
+        except json.decoder.JSONDecodeError:
+            st.write(response)
+
 
 def main():
     st.title('Playground')
@@ -83,6 +104,7 @@ def main():
     activities = [
         "Translation Practice",
         "Vocabulary Practice",
+        "Grammar Practice",
     ]
     activity = st.selectbox("Choose an activity", activities)
     if activity == "Translation Practice":
@@ -95,14 +117,14 @@ def main():
                 )
             st.session_state["exercises"] = data["exercises"]
         vocabulary = st.session_state.get("exercises", [])
-        for i, phrase in enumerate(vocabulary):
+        for i, grammar_item in enumerate(vocabulary):
             cols = st.columns(2)
             with cols[0]:
-                st.write(phrase[target_language_name])
+                st.write(grammar_item[target_language_name])
             with cols[1]:
                 show_answer = st.checkbox("Show Answer", key=i)
             if show_answer:
-                st.success(phrase[native_language_name])
+                st.success(grammar_item[native_language_name])
     elif activity == "Vocabulary Practice":
         if st.button("Start"):
             with st.spinner():
@@ -114,18 +136,43 @@ def main():
                 )
             st.session_state["vocabulary"] = data["vocabulary"]
         vocabulary = st.session_state.get("vocabulary", [])
-        for i, phrase in enumerate(vocabulary):
+        for i, grammar_item in enumerate(vocabulary):
             cols = st.columns([2, 1])
             with cols[0]:
-                st.write(phrase[target_language_name])
+                st.write(grammar_item[target_language_name])
             with cols[1]:
                 show_answer = st.checkbox("Show Answer", key=i)
             if show_answer:
-                translations = phrase[native_language_name]
+                translations = grammar_item[native_language_name]
                 if isinstance(translations, list):
-                    st.success(", ".join(phrase[native_language_name]))
+                    st.success(", ".join(grammar_item[native_language_name]))
                 else:
                     st.success(translations)
+    elif activity == "Grammar Practice":
+        if st.button("Start"):
+            with st.spinner():
+                data = playground.generate_grammar_practice(
+                    native_language=native_language_name,
+                    target_language=target_language_name,
+                    fluency=fluency,
+                    known_phrases=USER_PHRASES.get(target_language_name, []),
+                )
+            st.json(data)
+            st.session_state["grammar"] = data["grammar"]
+        vocabulary = st.session_state.get("grammar", [])
+        for i, grammar_item in enumerate(vocabulary):
+            cols = st.columns([2, 1])
+            with cols[0]:
+                st.write(grammar_item["mistake"])
+            with cols[1]:
+                show_answer = st.checkbox("Show Answer", key=i)
+            if show_answer:
+                corrected = grammar_item["correct"]
+                translation = grammar_item["translation"]
+                explanation = grammar_item["explanation"]
+                st.success(corrected)
+                st.warning(translation)
+                st.info(explanation)
 
 
 if __name__ == "__main__":
