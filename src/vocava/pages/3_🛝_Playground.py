@@ -57,7 +57,16 @@ def main():
                     target_language=target_language_name,
                     fluency=fluency,
                 )
-            st.write(data)
+            st.session_state["exercises"] = data["exercises"]
+        exercises = st.session_state.get("exercises", [])
+        for i, exercise in enumerate(exercises):
+            cols = st.columns(2)
+            with cols[0]:
+                st.write(exercise[target_language_name])
+            with cols[1]:
+                show_answer = st.checkbox("Show Answer", key=i)
+            if show_answer:
+                st.success(exercise[native_language_name])
 
 
 if __name__ == "__main__":
