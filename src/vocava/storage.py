@@ -13,7 +13,7 @@ class VectorStore:
         )
         self._collection: chromadb.api.Collection | None = None
 
-    def connect(self) -> bool:
+    def connect(self):
         self._collection = self._db.get_or_create_collection(
             name="vocava",
             embedding_function=self._embedding_function,
