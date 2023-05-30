@@ -1,68 +1,63 @@
-import io
+import json
 
-import openai
 import streamlit as st
 
-from vocava.st_custom_components import st_audiorec
+from vocava.llm import LanguageModel, anthropic, mock
+from vocava.llm.prompt import load_prompt
+from vocava.translate import LANGUAGES
+
+ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
 
-def review_mistakes():
-    # This could involve retrieving a list of common errors
-    # the user has made from a database and displaying them.
-    st.header("Your past mistakes:")
-    mistakes = [
-        "Mistake 1",
-        "Mistake 2",
-        "Mistake 3",
-    ]  # Fetch these from your database
-    for mistake in mistakes:
-        st.markdown(mistake)
+class Playground:
+    def __init__(self, model: LanguageModel):
+        self._model = model
 
-
-def word_reminders():
-    # This could involve retrieving a list of words the user
-    # is learning from a database and displaying them.
-    st.header("Words to remember:")
-    words = ["Word 1", "Word 2", "Word 3"]  # Fetch these from your database
-    for word in words:
-        st.markdown(word)
-
-
-def grammar_lessons():
-    # This could involve retrieving a list of grammar lessons
-    # from a database and displaying them.
-    st.header("Your grammar lessons:")
-    lessons = ["Lesson 1", "Lesson 2", "Lesson 3"]  # Fetch these from your database
-    for lesson in lessons:
-        st.markdown(lesson)
-
-
-def speech_exercise():
-    st.header("Record your pronunciation:")
-    wav_audio_data = st_audiorec()
-    if wav_audio_data is not None:
-        file = io.BytesIO(wav_audio_data)
-        file.name = "tmp.wav"
-        with st.spinner():
-            response = openai.Audio.transcribe("whisper-1", file)
-            st.text("Your speech transcription: " + response["text"])
-            # Use your language model to provide feedback
-            # on the user's pronunciation here
+    def generate_translation_practice(self, native_language, target_language, fluency):
+        prompt = load_prompt(
+            "playground-generate-translation-practice",
+            native_language=native_language,
+            target_language=target_language,
+            fluency=fluency,
+        )
+        response = self._model.generate(prompt, max_tokens=500)
+        try:
+            start = response.find("{")
+            payload = response[start:]
+            return json.loads(payload)
+        except json.decoder.JSONDecodeError:
+            st.write(response)
 
 
 def main():
     st.title('Playground')
 
-    activities = {
-        "Review Mistakes": review_mistakes,
-        "Word Reminders": word_reminders,
-        "Grammar Lessons": grammar_lessons,
-        "Speech Exercise": speech_exercise,
-    }
-    activity = st.selectbox("Choose an activity", activities.keys())
-    start_activity = activities.get(activity)
+    if st.sidebar.checkbox("DEBUG Mode", value=True):
+        model = mock.MockLanguageModel()
+    else:
+        model = anthropic.Claude(ANTHROPIC_API_KEY)
 
-    start_activity()
+    native_language = st.sidebar.selectbox("Native Language", options=LANGUAGES)
+    target_language = st.sidebar.selectbox(
+        "Choose Language", options=LANGUAGES, index=12)
+    native_language_name = LANGUAGES[native_language]["name"]
+    target_language_name = LANGUAGES[target_language]["name"]
+    fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
+
+    playground = Playground(model)
+    activities = [
+        "Translation Practice",
+    ]
+    activity = st.selectbox("Choose an activity", activities)
+    if activity == "Translation Practice":
+        if st.button("Start"):
+            with st.spinner():
+                data = playground.generate_translation_practice(
+                    native_language=native_language_name,
+                    target_language=target_language_name,
+                    fluency=fluency,
+                )
+            st.write(data)
 
 
 if __name__ == "__main__":
