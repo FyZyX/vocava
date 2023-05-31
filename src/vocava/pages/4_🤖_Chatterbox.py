@@ -1,14 +1,16 @@
 import io
+import json
 import time
 
 import openai
 import streamlit as st
 from streamlit_chat import message as chat_message
 
-from vocava import translate, storage
+from vocava import storage
 from vocava.llm import anthropic, mock, LanguageModel
+from vocava.llm.prompt import load_prompt
 from vocava.st_custom_components import st_audiorec
-from vocava.translate import Translator
+from vocava.translate import LANGUAGES
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
@@ -16,6 +18,9 @@ openai.api_key = st.secrets["openai_api_key"]
 
 
 class User:
+    def __init__(self, fluency):
+        self._fluency = fluency
+
     @staticmethod
     def _get_text(default=""):
         return st.text_input("Enter a Message", default)
@@ -37,6 +42,9 @@ class User:
             return self._get_text()
         elif input_method == "Voice Input":
             return self._get_audio_transcript()
+
+    def fluency(self):
+        return self._fluency
 
 
 class Interaction:
@@ -80,31 +88,42 @@ class Interaction:
 
 class Chatterbox:
     def __init__(self, user: User, user_language: str,
-                 bot: LanguageModel, bot_language: str,
-                 translator: Translator):
+                 bot: LanguageModel, bot_language: str):
         self._user = user
         self._user_language = user_language
         self._bot = bot
         self._bot_language = bot_language
-        self._translator = translator
         if "history" not in st.session_state:
             st.session_state["history"] = []
         self._interactions = st.session_state["history"]
 
-    def _send_message(self, prompt: str) -> Interaction:
-        translated_prompt = self._translator.translate(
-            prompt,
-            from_language=self._user_language,
-            to_language=self._bot_language,
+    def _send_message(
+            self, message,
+    ) -> Interaction:
+        prompt = load_prompt(
+            "chatterbox-interaction",
+            native_language=self._user_language,
+            target_language=self._bot_language,
+            fluency=self._user.fluency(),
+            conversation_history=self._interactions,
+            message=message,
         )
-        translated_response = self._bot.generate(translated_prompt)
-        response = self._translator.translate(
-            translated_response,
-            from_language=self._user_language,
-            to_language=self._bot_language,
-        )
+        response = self._bot.generate(prompt, max_tokens=5_000)
+        try:
+            start = response.find("{")
+            payload = response[start:]
+            data = json.loads(payload)
+            return self._add_to_history(data)
+        except json.decoder.JSONDecodeError:
+            st.write(response)
 
-        docs = [prompt, translated_prompt, translated_response, response]
+    def _add_to_history(self, data) -> Interaction:
+        docs = [
+            data["interaction"]["user"][self._user_language],
+            data["interaction"]["user"][self._bot_language],
+            data["interaction"]["bot"][self._bot_language],
+            data["interaction"]["bot"][self._user_language],
+        ]
         interaction = Interaction(
             docs, self._user_language, self._bot_language
         )
@@ -135,26 +154,27 @@ def main():
     db = storage.VectorStore(COHERE_API_KEY)
     db.connect()
 
-    user = User()
     if st.sidebar.checkbox("DEBUG Mode", value=True):
-        model = mock.MockLanguageModel()
         bot = mock.MockLanguageModel()
     else:
-        model = anthropic.Claude(ANTHROPIC_API_KEY)
         bot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
-    translator = translate.Translator(model)
 
-    from_lang = st.sidebar.text_input("Native Language", "en")
-    to_lang = st.sidebar.text_input("Chatterbox Language", "fr")
+    native_language = st.sidebar.selectbox("Native Language", options=LANGUAGES)
+    target_language = st.sidebar.selectbox(
+        "Choose Language", options=LANGUAGES, index=4)
+    native_language_name = LANGUAGES[native_language]["name"]
+    target_language_name = LANGUAGES[target_language]["name"]
+    fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
+
     input_method = st.sidebar.radio("Input method", ("Text Input", "Voice Input"))
     view_native = st.sidebar.checkbox("View in native language")
 
+    user = User(fluency)
     chatterbox = Chatterbox(
         user=user,
-        user_language=from_lang,
+        user_language=native_language_name,
         bot=bot,
-        bot_language=to_lang,
-        translator=translator,
+        bot_language=target_language_name,
     )
     with st.spinner():
         interaction = chatterbox.start_interaction(input_method)
@@ -162,7 +182,7 @@ def main():
     if interaction:
         db.save_interaction(interaction)
 
-    language = from_lang if view_native else to_lang
+    language = native_language_name if view_native else target_language_name
 
     for i, interaction in enumerate(chatterbox.interactions()):
         chat_message(interaction["bot"][language], key=f"{i}")
