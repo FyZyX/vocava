@@ -98,10 +98,11 @@ class Chatterbox:
         self._interactions = st.session_state["history"]
 
     def _send_message(
-            self, message,
-    ) -> Interaction:
+            self, message: str, native_mode: bool
+    ) -> tuple[Interaction, str | None, str | None]:
+        template = "chatterbox-native" if native_mode else "chatterbox-target"
         prompt = load_prompt(
-            "chatterbox-interaction",
+            template,
             native_language=self._user_language,
             target_language=self._bot_language,
             fluency=self._user.fluency(),
@@ -117,10 +118,13 @@ class Chatterbox:
         except json.decoder.JSONDecodeError:
             st.write(response)
 
-    def _add_to_history(self, data) -> Interaction:
+    def _add_to_history(self, data) -> tuple[Interaction, str | None, str | None]:
+        corrected = data["interaction"]["user"].get(f"{self._bot_language}_corrected")
+        explanation = data["interaction"]["user"].get(
+            f"{self._user_language}_explanation")
         docs = [
             data["interaction"]["user"][self._user_language],
-            data["interaction"]["user"][self._bot_language],
+            corrected or data["interaction"]["user"][self._bot_language],
             data["interaction"]["bot"][self._bot_language],
             data["interaction"]["bot"][self._user_language],
         ]
@@ -128,13 +132,11 @@ class Chatterbox:
             docs, self._user_language, self._bot_language
         )
         self._interactions.append(interaction.json())
-        return interaction
+        return interaction, corrected, explanation
 
-    def start_interaction(self, input_method) -> Interaction | None:
-        user_input = self._user.get_input(input_method)
-        if not user_input:
-            return None
-
+    def start_interaction(
+            self, user_input, native_mode: bool
+    ) -> tuple[Interaction, str | None, str | None] | tuple[None, None, None]:
         # streamlit rerender hack
         skip = False
         if len(self._interactions) > 0:
@@ -142,7 +144,8 @@ class Chatterbox:
             skip = user_input == last_input
 
         if not skip:
-            return self._send_message(user_input)
+            return self._send_message(user_input, native_mode)
+        return None, None, None
 
     def interactions(self):
         return self._interactions[::-1]
@@ -176,14 +179,22 @@ def main():
         bot=bot,
         bot_language=target_language_name,
     )
-    with st.spinner():
-        interaction = chatterbox.start_interaction(input_method)
+    user_input = user.get_input(input_method)
+    if st.button("Send"):
+        with st.spinner():
+            interaction, corrected, explanation = chatterbox.start_interaction(
+                user_input, native_mode=view_native)
 
-    if interaction:
-        db.save_interaction(interaction)
+        if interaction:
+            db.save_interaction(interaction)
+    else:
+        interaction, corrected, explanation = None, None, None
+
+    if corrected:
+        st.warning(corrected)
+        st.info(explanation)
 
     language = native_language_name if view_native else target_language_name
-
     for i, interaction in enumerate(chatterbox.interactions()):
         chat_message(interaction["bot"][language], key=f"{i}")
         chat_message(interaction["user"][language], is_user=True, key=f"{i}_user")
