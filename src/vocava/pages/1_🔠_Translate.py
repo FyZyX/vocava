@@ -1,8 +1,7 @@
 import streamlit as st
 
 from vocava.llm import anthropic, mock
-from vocava.translate import LANGUAGES
-from vocava.service import Service
+from vocava.service import LANGUAGES, Service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 

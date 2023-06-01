@@ -1,8 +1,12 @@
+import typing
+
 import llm
 import llm.prompt
 
 JSON = None | bool | int | float | str | dict[str, "JSON"] | list["JSON"]
-LANGUAGES = {
+
+Language: typing.TypeAlias = str
+LANGUAGES: dict[Language, dict[str, str]] = {
     "🇺🇸 English": {"name": "English", "flag": "🇺🇸", "code": "en"},
     "🇩🇪 German": {"name": "German", "flag": "🇩🇪", "code": "de"},
     "🇵🇱 Polish": {"name": "Polish", "flag": "🇵🇱", "code": "pl"},
@@ -28,12 +32,16 @@ class Service:
     def __init__(self, name: str, model: llm.LanguageModel):
         self._model = model
         self._name = name
+        self._languages: dict[Language, dict[str, str]] = LANGUAGES
+
+    def get_language_name(self, language: Language):
+        return self._languages[language]["name"]
 
     def run(self, native_language: str, target_language: str, **kwargs) -> JSON:
         prompt = llm.prompt.load_prompt(
             self._name,
-            native_language=LANGUAGES[native_language]["name"],
-            target_language=LANGUAGES[target_language]["name"],
+            native_language=self.get_language_name(native_language),
+            target_language=self.get_language_name(target_language),
             **kwargs
         )
         response = self._model.generate(prompt)

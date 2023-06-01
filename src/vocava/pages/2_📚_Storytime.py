@@ -5,7 +5,7 @@ import streamlit as st
 
 from vocava.llm import LanguageModel, anthropic, mock
 from vocava.llm.prompt import load_prompt
-from vocava.translate import LANGUAGES
+from vocava.service import LANGUAGES, Service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
@@ -53,7 +53,7 @@ def main():
     native_language_name = LANGUAGES[native_language]["name"]
     target_language_name = LANGUAGES[target_language]["name"]
     if st.button("Generate Story"):
-        storyteller = Storyteller(model)
+        storyteller = Service("storyteller", model)
         with st.spinner():
             data = storyteller.generate_story(
                 native_language_name,
