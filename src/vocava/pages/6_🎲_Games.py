@@ -55,6 +55,52 @@ def render_board(game_state):
     return markdown_table
 
 
+def play_jeopardy(native_language_name, target_language_name, fluency):
+    chatbot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
+    game = JeopardyGame(chatbot)
+    if st.button("New Game"):
+        with st.spinner():
+            board = game.create_board(
+                native_language=native_language_name,
+                target_language=target_language_name,
+                fluency=fluency,
+            )
+            st.session_state["jeopardy-board"] = board
+    board = st.session_state.get("jeopardy-board")
+    if not board:
+        return
+    st.markdown(render_board(board))
+    st.divider()
+    cols = st.columns(2)
+    with cols[0]:
+        categories = [category["name"] for category in board["categories"]]
+        category = st.selectbox("Select Topic", options=categories)
+    with cols[1]:
+        points = st.number_input(
+            "Select Points", min_value=200, max_value=1000, step=200)
+
+    if st.button("Go"):
+        index = categories.index(category)
+        question = board["categories"][index]["questions"][points // 200 - 1]
+        st.session_state["current_question"] = question
+    if st.session_state.get("current_question"):
+        question = st.session_state["current_question"]
+        if question.get("is_answered"):
+            st.error("You've already answered this question!")
+            return
+        st.write(question["text"])
+        # st.write(question["answer"])
+        answer = st.text_input("Answer")
+        if not answer:
+            return
+        question["is_answered"] = True
+        if answer != question["answer"]:
+            st.error("Unfortunately, that's not correct.")
+        else:
+            st.success("Good job!")
+        del st.session_state["current_question"]
+
+
 def main():
     st.title('Games')
 
@@ -71,49 +117,7 @@ def main():
     game_name = st.selectbox("Select Game", options=games)
 
     if game_name == "Jeopardy":
-        chatbot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
-        game = JeopardyGame(chatbot)
-        if st.button("New Game"):
-            with st.spinner():
-                board = game.create_board(
-                    native_language=native_language_name,
-                    target_language=target_language_name,
-                    fluency=fluency,
-                )
-                st.session_state["jeopardy-board"] = board
-        board = st.session_state.get("jeopardy-board")
-        if not board:
-            return
-        st.markdown(render_board(board))
-        st.divider()
-        cols = st.columns(2)
-        with cols[0]:
-            categories = [category["name"] for category in board["categories"]]
-            category = st.selectbox("Select Topic", options=categories)
-        with cols[1]:
-            points = st.number_input(
-                "Select Points", min_value=200, max_value=1000, step=200)
-
-        if st.button("Go"):
-            index = categories.index(category)
-            question = board["categories"][index]["questions"][points // 200 - 1]
-            st.session_state["current_question"] = question
-        if st.session_state.get("current_question"):
-            question = st.session_state["current_question"]
-            if question.get("is_answered"):
-                st.error("You've already answered this question!")
-                return
-            st.write(question["text"])
-            # st.write(question["answer"])
-            answer = st.text_input("Answer")
-            if not answer:
-                return
-            question["is_answered"] = True
-            if answer != question["answer"]:
-                st.error("Unfortunately, that's not correct.")
-            else:
-                st.success("Good job!")
-            del st.session_state["current_question"]
+        play_jeopardy(native_language_name, target_language_name, fluency)
 
 
 if __name__ == "__main__":
