@@ -29,19 +29,34 @@ LANGUAGES: dict[Language, dict[str, str]] = {
 
 
 class Service:
-    def __init__(self, name: str, model: llm.LanguageModel):
+    def __init__(self, name: str, model: llm.LanguageModel,
+                 native_language: Language, target_language: Language,
+                 native_mode: bool = False):
         self._model = model
         self._name = name
+        self._native_language = native_language
+        self._target_language = target_language
+        self._native_mode = native_mode
         self._languages: dict[Language, dict[str, str]] = LANGUAGES
 
     def get_language_name(self, language: Language):
         return self._languages[language]["name"]
 
-    def run(self, native_language: str, target_language: str, **kwargs) -> JSON:
+    def toggle_native_mode(self):
+        self._native_mode = not self._native_mode
+
+    def is_in_native_mode(self) -> bool:
+        return self._native_mode
+
+    def current_language(self):
+        return self.get_language_name(
+            self._native_language if self._native_mode else self._target_language)
+
+    def run(self, **kwargs) -> JSON:
         prompt = llm.prompt.load_prompt(
             self._name,
-            native_language=self.get_language_name(native_language),
-            target_language=self.get_language_name(target_language),
+            native_language=self.get_language_name(self._native_language),
+            target_language=self.get_language_name(self._target_language),
             **kwargs
         )
         response = self._model.generate(prompt)

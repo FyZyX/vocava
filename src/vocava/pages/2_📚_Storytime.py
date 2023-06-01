@@ -1,35 +1,9 @@
-import json
-from typing import Any
-
 import streamlit as st
 
-from vocava.llm import LanguageModel, anthropic, mock
-from vocava.llm.prompt import load_prompt
+from vocava.llm import anthropic, mock
 from vocava.service import LANGUAGES, Service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
-
-
-class Storyteller:
-    def __init__(self, model: LanguageModel):
-        self._model = model
-
-    def generate_story(self, native_language: str, target_language: str,
-                       fluency: int, concept: str) -> dict[str, Any]:
-        prompt = load_prompt(
-            "storytime",
-            native_language=native_language,
-            target_language=target_language,
-            fluency=fluency,
-            concept=concept,
-        )
-        response = self._model.generate(prompt, max_tokens=2_000)
-        try:
-            start = response.find("{")
-            payload = response[start:]
-            return json.loads(payload)
-        except json.decoder.JSONDecodeError:
-            st.write(response)
 
 
 def main():
@@ -47,23 +21,22 @@ def main():
     target_language = st.sidebar.selectbox("Choose Language", options=LANGUAGES,
                                            index=12)
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
-    show_native = st.sidebar.checkbox("View in native language")
+    view_native = st.sidebar.checkbox("View in native language")
 
-    user_prompt = st.text_input("What kind of story would you like?")
-    native_language_name = LANGUAGES[native_language]["name"]
-    target_language_name = LANGUAGES[target_language]["name"]
+    concept = st.text_input("What kind of story would you like?")
+    storytime = Service(
+        "storytime",
+        model=model,
+        native_language=native_language,
+        target_language=target_language,
+        native_mode=view_native,
+    )
     if st.button("Generate Story"):
-        storyteller = Service("storyteller", model)
         with st.spinner():
-            data = storyteller.generate_story(
-                native_language_name,
-                target_language_name,
-                fluency,
-                user_prompt,
-            )
+            data = storytime.run(fluency=fluency, concept=concept)
         st.session_state["data"] = data
 
-    language = native_language_name if show_native else target_language_name
+    language = storytime.current_language()
     data = st.session_state["data"]
     if not data or language not in data["story"]:
         return

@@ -13,19 +13,19 @@ def main():
         model = mock.MockLanguageModel()
     else:
         model = anthropic.Claude(ANTHROPIC_API_KEY)
-    translator = Service("translator", model)
 
     from_lang = st.sidebar.selectbox("From Language", options=LANGUAGES)
     to_lang = st.sidebar.selectbox("To Language", options=LANGUAGES, index=4)
-
-    text_to_translate = st.text_area("Enter text to translate")
+    translator = Service(
+        name="translator",
+        native_language=from_lang,
+        target_language=to_lang,
+        model=model,
+    )
+    text = st.text_area("Enter text to translate")
     if st.button("Translate"):
         with st.spinner():
-            data = translator.run(
-                native_language=LANGUAGES[from_lang]["name"],
-                target_language=LANGUAGES[to_lang]["name"],
-                text=text_to_translate,
-            )
+            data = translator.run(text=text)
         st.divider()
 
         translation = data["translation"]
