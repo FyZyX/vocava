@@ -1,5 +1,6 @@
 import json
 
+import openai
 import streamlit as st
 
 from vocava.llm import anthropic
@@ -31,18 +32,31 @@ class Arcade:
             st.error(e)
             st.write(response)
 
-    def new_pictionary_game(self, target_language, fluency):
+    def new_pictionary_game(self, native_language, target_language, fluency):
         prompt = load_prompt(
             "arcade-pictionary",
+            native_language=native_language,
             target_language=target_language,
             fluency=fluency,
         )
-        response = self._chatbot.generate(prompt, max_tokens=5_000)
-        st.code(response)
-        start = response.find("---")
-        response = response[start:]
-        word, picture = response.strip("---").split("---")
-        return {"word": word.strip(), "picture": picture}
+        response = self._chatbot.generate(prompt, max_tokens=200)
+        try:
+            response = response.replace("```json", "").replace("```", "")
+            start = response.find("{")
+            payload = response[start:]
+            data = json.loads(payload)
+        except json.decoder.JSONDecodeError as e:
+            st.error(e)
+            st.write(response)
+        else:
+            response = openai.Image.create(
+                prompt=data["prompt"],
+                n=1,
+                size="512x512",
+            )
+            image_url = response['data'][0]['url']
+            data.update(url=image_url)
+            return data
 
 
 def render_board(game_state):
@@ -113,12 +127,13 @@ def play_jeopardy(native_language_name, target_language_name, fluency):
         del st.session_state["current_question"]
 
 
-def play_pictionary(target_language, fluency):
+def play_pictionary(native_language, target_language, fluency):
     model = anthropic.Claude(ANTHROPIC_API_KEY)
     game = Arcade(model)
     if st.button("New Game"):
         with st.spinner():
             data = game.new_pictionary_game(
+                native_language=native_language,
                 target_language=target_language,
                 fluency=fluency,
             )
@@ -127,15 +142,16 @@ def play_pictionary(target_language, fluency):
     if not data:
         return
     word = data["word"]
-    picture = data["picture"]
-    st.code("Picture:" + picture)
+    translation = data["translation"]
+    url = data["url"]
+    st.image(url)
     guess = st.text_input("Guess").lower()
     if not guess:
         return
     if guess == data["word"].lower():
         st.success("Good job!")
     else:
-        st.error(f"Sorry, the word was actually {word}")
+        st.error(f"Sorry, the word was actually {word} ({translation})")
 
 
 def main():
@@ -157,7 +173,7 @@ def main():
     if game_name == "Jeopardy":
         play_jeopardy(native_language_name, target_language_name, fluency)
     elif game_name == "Pictionary":
-        play_pictionary(target_language_name, fluency)
+        play_pictionary(native_language, target_language_name, fluency)
 
 
 if __name__ == "__main__":
