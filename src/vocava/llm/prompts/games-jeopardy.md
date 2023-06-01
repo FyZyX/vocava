@@ -2,13 +2,13 @@ Act as a language teacher for a student learning {$target_language} (fluency ${f
 Create 5 unique and creative categories: CATEGORY-1, CATEGORY-2, CATEGORY-3, CATEGORY-4, CATEGORY-5
 Within each category, there must be 5 questions (and associated answers) with the point values 200, 400, 600, 800, 1000, respectively.
 Each question should help with some aspect of language learning. Answers should always be in ($target_language).
-For fluency 3 and below, keep the questions in ${native_language}
-For fluency 4 and above, provide the questions in ${target_language}
+For fluency 3 and below, keep the category names and questions in ${native_language}
+For fluency 4 and above, provide the category names and questions in ${target_language}
 
-You must:
-- Create all 5 categories
+You MUST include ALL 5 CATEGORIES and ALL 5 QUESTIONS for each category:
+- Create all 5 categories, give the appropriate names, don't use the placeholders
 - Create all 5 questions for each category
-- Format all categories and questions as sepcified below
+- Format all categories and questions as specified below
 - All 25 questions must be returned
 
 Respond only with a valid JSON payload as if you were a REST API.
@@ -50,5 +50,3 @@ Each `<question>` should look like this:
   "is_answered": false
 }
 ```
-
-You MUST include ALL 5 CATEGORIES and ALL 5 QUESTIONS for each category.

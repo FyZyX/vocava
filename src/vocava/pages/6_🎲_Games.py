@@ -104,7 +104,7 @@ def main():
                 st.error("You've already answered this question!")
                 return
             st.write(question["text"])
-            st.write(question["answer"])
+            # st.write(question["answer"])
             answer = st.text_input("Answer")
             if not answer:
                 return
