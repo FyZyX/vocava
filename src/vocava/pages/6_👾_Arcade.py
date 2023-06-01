@@ -258,9 +258,9 @@ def play_odd_one_out(native_language, target_language, fluency):
             )
             st.session_state["odd-one-out"] = data
     data = st.session_state.get("odd-one-out")
-    if not data:
-        return
     language = native_language if view_native else target_language
+    if not data or language not in data:
+        return
     words = data[language]["words"]
     theme = data[language]["theme"]
     answer = data[language]["answer"]
