@@ -13,9 +13,10 @@ class JeopardyGame:
     def __init__(self, chatbot: anthropic.ClaudeChatBot):
         self._chatbot = chatbot
 
-    def create_board(self, target_language, fluency):
+    def create_board(self, native_language, target_language, fluency):
         prompt = load_prompt(
             "games-jeopardy",
+            native_language=native_language,
             target_language=target_language,
             fluency=fluency,
         )
@@ -33,9 +34,9 @@ class JeopardyGame:
 
 def render_board(game_state):
     # Generate markdown table header
-    markdown_table = "|   |" + " | ".join(
+    markdown_table = "|   | " + " | ".join(
         [cat["name"] for cat in game_state["categories"]]) + " |\n"
-    markdown_table += "|" + "----|" * (len(game_state["categories"]) + 1) + "\n"
+    markdown_table += "|" + "---|" * (len(game_state["categories"]) + 1) + "\n"
 
     # Generate markdown table rows
     for i in range(5):  # 5 questions per category
@@ -57,8 +58,11 @@ def render_board(game_state):
 def main():
     st.title('Games')
 
+    native_language = st.sidebar.selectbox("Choose Language", options=LANGUAGES)
     target_language = st.sidebar.selectbox(
         "Choose Language", options=LANGUAGES, index=12)
+    native_language_name = LANGUAGES[native_language]["name"]
+    target_language_name = LANGUAGES[target_language]["name"]
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
 
     games = [
@@ -72,14 +76,44 @@ def main():
         if st.button("New Game"):
             with st.spinner():
                 board = game.create_board(
-                    target_language=target_language,
+                    native_language=native_language_name,
+                    target_language=target_language_name,
                     fluency=fluency,
                 )
                 st.session_state["jeopardy-board"] = board
-            st.json(board)
         board = st.session_state.get("jeopardy-board")
-        if board:
-            st.markdown(render_board(board))
+        if not board:
+            return
+        st.markdown(render_board(board))
+        st.divider()
+        cols = st.columns(2)
+        with cols[0]:
+            categories = [category["name"] for category in board["categories"]]
+            category = st.selectbox("Select Topic", options=categories)
+        with cols[1]:
+            points = st.number_input(
+                "Select Points", min_value=200, max_value=1000, step=200)
+
+        if st.button("Go"):
+            index = categories.index(category)
+            question = board["categories"][index]["questions"][points // 200 - 1]
+            st.session_state["current_question"] = question
+        if st.session_state.get("current_question"):
+            question = st.session_state["current_question"]
+            if question.get("is_answered"):
+                st.error("You've already answered this question!")
+                return
+            st.write(question["text"])
+            st.write(question["answer"])
+            answer = st.text_input("Answer")
+            if not answer:
+                return
+            question["is_answered"] = True
+            if answer != question["answer"]:
+                st.error("Unfortunately, that's not correct.")
+            else:
+                st.success("Good job!")
+            del st.session_state["current_question"]
 
 
 if __name__ == "__main__":
