@@ -65,7 +65,7 @@ class Arcade:
             target_language=target_language,
             fluency=fluency,
         )
-        response = self._chatbot.generate(prompt, max_tokens=500)
+        response = self._chatbot.generate(prompt, max_tokens=300)
         try:
             response = response.replace("```json", "").replace("```", "")
             start = response.find("{")
@@ -76,13 +76,16 @@ class Arcade:
             st.error(e)
             st.write(response)
 
-    def grade_mad_lib(self, original, words):
+    def grade_mad_lib(self, native_language, target_language, fluency, original, words):
         prompt = load_prompt(
-            "arcade-mad-libs-create",
+            "arcade-mad-libs-grade",
+            native_language=native_language,
+            target_language=target_language,
+            fluency=fluency,
             original=original,
             words=words,
         )
-        response = self._chatbot.generate(prompt, max_tokens=50)
+        response = self._chatbot.generate(prompt, max_tokens=650)
         try:
             response = response.replace("```json", "").replace("```", "")
             start = response.find("{")
@@ -204,13 +207,22 @@ def play_mad_libs(native_language, target_language, fluency):
     if not data:
         return
     text = data["text"]
-    st.markdown(text)
     blanks = data["blanks"]
     answers = []
     for i, blank in enumerate(blanks):
         answers.append(st.text_input(blank, key=i))
     if st.button("Submit"):
-        arcade.grade_mad_lib(text, answers)
+        with st.spinner():
+            data = arcade.grade_mad_lib(
+                native_language=native_language,
+                target_language=target_language,
+                fluency=fluency,
+                original=text,
+                words=answers,
+            )
+        st.markdown(data["output"])
+        st.info(data["translation"])
+        st.metric("Total Points", data["points"])
 
 
 def main():
