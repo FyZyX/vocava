@@ -119,10 +119,10 @@ def render_board(game_state):
 
 def play_jeopardy(native_language_name, target_language_name, fluency):
     chatbot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
-    game = Arcade(chatbot)
+    arcade = Arcade(chatbot)
     if st.button("New Game"):
         with st.spinner():
-            board = game.new_jeopardy_game(
+            board = arcade.new_jeopardy_game(
                 native_language=native_language_name,
                 target_language=target_language_name,
                 fluency=fluency,
@@ -164,10 +164,10 @@ def play_jeopardy(native_language_name, target_language_name, fluency):
 
 def play_pictionary(native_language, target_language, fluency):
     model = anthropic.Claude(ANTHROPIC_API_KEY)
-    game = Arcade(model)
+    arcade = Arcade(model)
     if st.button("New Game"):
         with st.spinner():
-            data = game.new_pictionary_game(
+            data = arcade.new_pictionary_game(
                 native_language=native_language,
                 target_language=target_language,
                 fluency=fluency,
@@ -191,10 +191,10 @@ def play_pictionary(native_language, target_language, fluency):
 
 def play_mad_libs(native_language, target_language, fluency):
     model = anthropic.Claude(ANTHROPIC_API_KEY)
-    game = Arcade(model)
+    arcade = Arcade(model)
     if st.button("New Game"):
         with st.spinner():
-            data = game.new_mad_lib(
+            data = arcade.new_mad_lib(
                 native_language=native_language,
                 target_language=target_language,
                 fluency=fluency,
@@ -210,11 +210,11 @@ def play_mad_libs(native_language, target_language, fluency):
     for i, blank in enumerate(blanks):
         answers.append(st.text_input(blank, key=i))
     if st.button("Submit"):
-        game.grade_mad_lib(text, answers)
+        arcade.grade_mad_lib(text, answers)
 
 
 def main():
-    st.title('Games')
+    st.title('Arcade')
 
     native_language = st.sidebar.selectbox("Choose Language", options=LANGUAGES)
     target_language = st.sidebar.selectbox(
