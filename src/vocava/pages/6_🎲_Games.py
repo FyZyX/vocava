@@ -19,7 +19,7 @@ class JeopardyGame:
             target_language=target_language,
             fluency=fluency,
         )
-        response = self._chatbot.generate(prompt, max_tokens=15_000)
+        response = self._chatbot.generate(prompt, max_tokens=5_000)
         try:
             response = response.replace("```json", "").replace("```", "")
             start = response.find("{")
@@ -29,6 +29,29 @@ class JeopardyGame:
         except json.decoder.JSONDecodeError as e:
             st.error(e)
             st.write(response)
+
+
+def render_board(game_state):
+    # Generate markdown table header
+    markdown_table = "|   |" + " | ".join(
+        [cat["name"] for cat in game_state["categories"]]) + " |\n"
+    markdown_table += "|" + "----|" * (len(game_state["categories"]) + 1) + "\n"
+
+    # Generate markdown table rows
+    for i in range(5):  # 5 questions per category
+        markdown_table += f"| {200 * (i + 1)} |"  # Start with the point value
+
+        for cat in game_state["categories"]:
+            # Check if the question has been answered
+            is_answered = cat["questions"][i]["is_answered"]
+            if is_answered:
+                markdown_table += "   |"  # Empty cell for answered questions
+            else:
+                markdown_table += " ? |"  # Mark unanswered questions with a ?
+
+        markdown_table += "\n"
+
+    return markdown_table
 
 
 def main():
@@ -57,7 +80,7 @@ def main():
         board = st.session_state.get("jeopardy-board")
         if board:
             st.write(anthropic.count_tokens(str(board)))
-            st.json(board)
+            st.markdown(render_board(board))
 
 
 if __name__ == "__main__":
