@@ -146,12 +146,12 @@ def play_pictionary(native_language, target_language, fluency):
     url = data["url"]
     st.image(url)
     guess = st.text_input("Guess").lower()
-    if not guess:
-        return
-    if guess == data["word"].lower():
-        st.success("Good job!")
-    else:
-        st.error(f"Sorry, the word was actually {word} ({translation})")
+    if st.button("Guess"):
+        if guess == data["word"].lower():
+            st.success("Good job!")
+        else:
+            st.info(data["prompt"])
+            st.error(f"Sorry, the word was actually {word} ({translation})")
 
 
 def main():
