@@ -209,8 +209,10 @@ def play_mad_libs(native_language, target_language, fluency):
     text = data["text"]
     blanks = data["blanks"]
     answers = []
+    cols = st.columns(3)
     for i, blank in enumerate(blanks):
-        answers.append(st.text_input(blank, key=i))
+        with cols[i % 3]:
+            answers.append(st.text_input(blank, key=i))
     if st.button("Submit"):
         with st.spinner():
             data = arcade.grade_mad_lib(
