@@ -96,6 +96,24 @@ class Arcade:
             st.error(e)
             st.write(response)
 
+    def new_odd_one_out(self, native_language, target_language, fluency):
+        prompt = load_prompt(
+            "arcade-odd-one-out",
+            native_language=native_language,
+            target_language=target_language,
+            fluency=fluency,
+        )
+        response = self._chatbot.generate(prompt, max_tokens=650)
+        try:
+            response = response.replace("```json", "").replace("```", "")
+            start = response.find("{")
+            payload = response[start:]
+            data = json.loads(payload)
+            return data
+        except json.decoder.JSONDecodeError as e:
+            st.error(e)
+            st.write(response)
+
 
 def render_board(game_state):
     # Generate markdown table header
@@ -227,20 +245,53 @@ def play_mad_libs(native_language, target_language, fluency):
         st.metric("Total Points", data["points"])
 
 
+def play_odd_one_out(native_language, target_language, fluency):
+    model = anthropic.Claude(ANTHROPIC_API_KEY)
+    arcade = Arcade(model)
+    view_native = st.checkbox("Native View")
+    if st.button("New Game"):
+        with st.spinner():
+            data = arcade.new_odd_one_out(
+                native_language=native_language,
+                target_language=target_language,
+                fluency=fluency,
+            )
+            st.session_state["odd-one-out"] = data
+    data = st.session_state.get("odd-one-out")
+    if not data:
+        return
+    language = native_language if view_native else target_language
+    words = data[language]["words"]
+    theme = data[language]["theme"]
+    answer = data[language]["answer"]
+    cols = st.columns(3)
+    for i, word in enumerate(words):
+        with cols[i % 3]:
+            st.markdown(word)
+    guess = st.selectbox("Pick the :green[Odd One Out]!", options=words)
+    if st.button("Guess") and guess:
+        if guess.strip().lower() == answer.strip().lower():
+            st.success("Good job!")
+            st.info(theme)
+        else:
+            st.error("Sorry, that's not right.")
+
+
 def main():
     st.title('Arcade')
 
-    native_language = st.sidebar.selectbox("Choose Language", options=LANGUAGES)
+    native_language = st.sidebar.selectbox("Native Language", options=LANGUAGES)
     target_language = st.sidebar.selectbox(
-        "Choose Language", options=LANGUAGES, index=12)
+        "Target Language", options=LANGUAGES, index=12)
     native_language_name = LANGUAGES[native_language]["name"]
     target_language_name = LANGUAGES[target_language]["name"]
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
 
     games = [
-        "Jeopardy",
         "Pictionary",
+        "Odd One Out",
         "Mad Libs",
+        "Jeopardy",
     ]
     game_name = st.selectbox("Select Game", options=games)
 
@@ -250,6 +301,8 @@ def main():
         play_pictionary(native_language_name, target_language_name, fluency)
     elif game_name == "Mad Libs":
         play_mad_libs(native_language_name, target_language_name, fluency)
+    elif game_name == "Odd One Out":
+        play_odd_one_out(native_language_name, target_language_name, fluency)
 
 
 if __name__ == "__main__":
