@@ -9,13 +9,13 @@ from vocava.translate import LANGUAGES
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
 
-class JeopardyGame:
-    def __init__(self, chatbot: anthropic.ClaudeChatBot):
+class Arcade:
+    def __init__(self, chatbot: anthropic.Claude):
         self._chatbot = chatbot
 
-    def create_board(self, native_language, target_language, fluency):
+    def create_jeopardy_game(self, native_language, target_language, fluency):
         prompt = load_prompt(
-            "games-jeopardy",
+            "arcade-jeopardy",
             native_language=native_language,
             target_language=target_language,
             fluency=fluency,
@@ -30,6 +30,19 @@ class JeopardyGame:
         except json.decoder.JSONDecodeError as e:
             st.error(e)
             st.write(response)
+
+    def new_pictionary_game(self, target_language, fluency):
+        prompt = load_prompt(
+            "arcade-pictionary",
+            target_language=target_language,
+            fluency=fluency,
+        )
+        response = self._chatbot.generate(prompt, max_tokens=5_000)
+        st.code(response)
+        start = response.find("---")
+        response = response[start:]
+        word, picture = response.strip("---").split("---")
+        return {"word": word.strip(), "picture": picture}
 
 
 def render_board(game_state):
@@ -57,10 +70,10 @@ def render_board(game_state):
 
 def play_jeopardy(native_language_name, target_language_name, fluency):
     chatbot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
-    game = JeopardyGame(chatbot)
+    game = Arcade(chatbot)
     if st.button("New Game"):
         with st.spinner():
-            board = game.create_board(
+            board = game.create_jeopardy_game(
                 native_language=native_language_name,
                 target_language=target_language_name,
                 fluency=fluency,
@@ -89,7 +102,6 @@ def play_jeopardy(native_language_name, target_language_name, fluency):
             st.error("You've already answered this question!")
             return
         st.write(question["text"])
-        # st.write(question["answer"])
         answer = st.text_input("Answer")
         if not answer:
             return
@@ -102,7 +114,28 @@ def play_jeopardy(native_language_name, target_language_name, fluency):
 
 
 def play_pictionary(target_language, fluency):
-    pass
+    model = anthropic.Claude(ANTHROPIC_API_KEY)
+    game = Arcade(model)
+    if st.button("New Game"):
+        with st.spinner():
+            data = game.new_pictionary_game(
+                target_language=target_language,
+                fluency=fluency,
+            )
+            st.session_state["pitctionary"] = data
+    data = st.session_state.get("pitctionary")
+    if not data:
+        return
+    word = data["word"]
+    picture = data["picture"]
+    st.code("Picture:" + picture)
+    guess = st.text_input("Guess").lower()
+    if not guess:
+        return
+    if guess == data["word"].lower():
+        st.success("Good job!")
+    else:
+        st.error(f"Sorry, the word was actually {word}")
 
 
 def main():
