@@ -14,7 +14,7 @@ class Arcade:
     def __init__(self, chatbot: anthropic.Claude):
         self._chatbot = chatbot
 
-    def create_jeopardy_game(self, native_language, target_language, fluency):
+    def new_jeopardy_game(self, native_language, target_language, fluency):
         prompt = load_prompt(
             "arcade-jeopardy",
             native_language=native_language,
@@ -58,6 +58,41 @@ class Arcade:
             data.update(url=image_url)
             return data
 
+    def new_mad_lib(self, native_language, target_language, fluency):
+        prompt = load_prompt(
+            "arcade-mad-libs-create",
+            native_language=native_language,
+            target_language=target_language,
+            fluency=fluency,
+        )
+        response = self._chatbot.generate(prompt, max_tokens=500)
+        try:
+            response = response.replace("```json", "").replace("```", "")
+            start = response.find("{")
+            payload = response[start:]
+            data = json.loads(payload)
+            return data
+        except json.decoder.JSONDecodeError as e:
+            st.error(e)
+            st.write(response)
+
+    def grade_mad_lib(self, original, words):
+        prompt = load_prompt(
+            "arcade-mad-libs-create",
+            original=original,
+            words=words,
+        )
+        response = self._chatbot.generate(prompt, max_tokens=50)
+        try:
+            response = response.replace("```json", "").replace("```", "")
+            start = response.find("{")
+            payload = response[start:]
+            data = json.loads(payload)
+            return data
+        except json.decoder.JSONDecodeError as e:
+            st.error(e)
+            st.write(response)
+
 
 def render_board(game_state):
     # Generate markdown table header
@@ -87,7 +122,7 @@ def play_jeopardy(native_language_name, target_language_name, fluency):
     game = Arcade(chatbot)
     if st.button("New Game"):
         with st.spinner():
-            board = game.create_jeopardy_game(
+            board = game.new_jeopardy_game(
                 native_language=native_language_name,
                 target_language=target_language_name,
                 fluency=fluency,
@@ -154,6 +189,30 @@ def play_pictionary(native_language, target_language, fluency):
             st.error(f"Sorry, the word was actually {word} ({translation})")
 
 
+def play_mad_libs(native_language, target_language, fluency):
+    model = anthropic.Claude(ANTHROPIC_API_KEY)
+    game = Arcade(model)
+    if st.button("New Game"):
+        with st.spinner():
+            data = game.new_mad_lib(
+                native_language=native_language,
+                target_language=target_language,
+                fluency=fluency,
+            )
+            st.session_state["mad-libs"] = data
+    data = st.session_state.get("mad-libs")
+    if not data:
+        return
+    text = data["text"]
+    st.markdown(text)
+    blanks = data["blanks"]
+    answers = []
+    for i, blank in enumerate(blanks):
+        answers.append(st.text_input(blank, key=i))
+    if st.button("Submit"):
+        game.grade_mad_lib(text, answers)
+
+
 def main():
     st.title('Games')
 
@@ -167,13 +226,16 @@ def main():
     games = [
         "Jeopardy",
         "Pictionary",
+        "Mad Libs",
     ]
     game_name = st.selectbox("Select Game", options=games)
 
     if game_name == "Jeopardy":
         play_jeopardy(native_language_name, target_language_name, fluency)
     elif game_name == "Pictionary":
-        play_pictionary(native_language, target_language_name, fluency)
+        play_pictionary(native_language_name, target_language_name, fluency)
+    elif game_name == "Mad Libs":
+        play_mad_libs(native_language_name, target_language_name, fluency)
 
 
 if __name__ == "__main__":
