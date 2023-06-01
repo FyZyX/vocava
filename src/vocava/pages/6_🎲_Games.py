@@ -101,6 +101,10 @@ def play_jeopardy(native_language_name, target_language_name, fluency):
         del st.session_state["current_question"]
 
 
+def play_pictionary(target_language, fluency):
+    pass
+
+
 def main():
     st.title('Games')
 
@@ -112,12 +116,15 @@ def main():
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
 
     games = [
-        "Jeopardy"
+        "Jeopardy",
+        "Pictionary",
     ]
     game_name = st.selectbox("Select Game", options=games)
 
     if game_name == "Jeopardy":
         play_jeopardy(native_language_name, target_language_name, fluency)
+    elif game_name == "Pictionary":
+        play_pictionary(target_language_name, fluency)
 
 
 if __name__ == "__main__":
