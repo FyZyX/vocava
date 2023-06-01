@@ -79,7 +79,6 @@ def main():
             st.json(board)
         board = st.session_state.get("jeopardy-board")
         if board:
-            st.write(anthropic.count_tokens(str(board)))
             st.markdown(render_board(board))
 
 
