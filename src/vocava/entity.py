@@ -24,6 +24,28 @@ LANGUAGES: dict[Language, dict[str, str]] = {
     "🇵🇭 Tagalog": {"name": "Tagalog", "flag": "🇵🇭", "code": "tl"},
     "🇻🇳 Vietnamese": {"name": "Vietnamese", "flag": "🇻🇳", "code": "vi"},
 }
+USER_VOCABULARY = {
+    "Japanese": {
+        "はじめまして": ["How do you do?", "Nice to meet you"],
+        "うれしい": ["happy", "glad", "joyful"],
+        "つくづく": ["really", "indeed"],
+        "ストーブ": ["stove"],
+        "さすがに": ["as expected", "sure enough"],
+        "ありゃありゃ": ["my my", "dear me"],
+        "あざとい": ["showy", "flashy", "gaudy"],
+        "ohayou gozaimasu": ["good morning", "hello"],
+        "konnichiwa": ["good day", "hello"],
+        "oyasumi nasai": ["good night"],
+        "sumimasen": ["excuse me"],
+        "arigatou gozaimasu": ["thank you"],
+        "nani o shimasu ka": ["what are you doing?"],
+        "sore wa totemo oishii desu": ["that is very tasty"],
+    }
+}
+USER_PHRASES = {
+    "Japanese": {
+    }
+}
 
 
 class User:
@@ -33,6 +55,8 @@ class User:
         self._target_language = target_language
         self._fluency = fluency
         self._languages: dict[Language, dict[str, str]] = LANGUAGES
+        self._vocabulary = USER_VOCABULARY
+        self._phrases = USER_PHRASES
 
     def _get_language_name(self, language: Language):
         return self._languages[language]["name"]
@@ -42,6 +66,12 @@ class User:
 
     def target_language_name(self) -> str:
         return self._get_language_name(self._native_language)
+
+    def known_vocabulary(self):
+        return self._vocabulary.get(self.target_language_name())
+
+    def known_phrases(self):
+        return self._phrases.get(self.target_language_name())
 
     def fluency(self):
         return self._fluency
