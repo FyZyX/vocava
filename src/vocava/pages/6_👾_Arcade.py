@@ -1,118 +1,9 @@
-import json
-
 import openai
 import streamlit as st
 
-from vocava.llm import anthropic
-from vocava.llm.prompt import load_prompt
-from vocava.translate import LANGUAGES
+from vocava import entity, service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
-
-
-class Arcade:
-    def __init__(self, chatbot: anthropic.Claude):
-        self._chatbot = chatbot
-
-    def new_jeopardy_game(self, native_language, target_language, fluency):
-        prompt = load_prompt(
-            "arcade-jeopardy",
-            native_language=native_language,
-            target_language=target_language,
-            fluency=fluency,
-        )
-        response = self._chatbot.generate(prompt, max_tokens=5_000)
-        try:
-            response = response.replace("```json", "").replace("```", "")
-            start = response.find("{")
-            payload = response[start:]
-            data = json.loads(payload)
-            return data
-        except json.decoder.JSONDecodeError as e:
-            st.error(e)
-            st.write(response)
-
-    def new_pictionary_game(self, native_language, target_language, fluency):
-        prompt = load_prompt(
-            "arcade-pictionary",
-            native_language=native_language,
-            target_language=target_language,
-            fluency=fluency,
-        )
-        response = self._chatbot.generate(prompt, max_tokens=200)
-        try:
-            response = response.replace("```json", "").replace("```", "")
-            start = response.find("{")
-            payload = response[start:]
-            data = json.loads(payload)
-        except json.decoder.JSONDecodeError as e:
-            st.error(e)
-            st.write(response)
-        else:
-            response = openai.Image.create(
-                prompt=data["prompt"],
-                n=1,
-                size="512x512",
-            )
-            image_url = response['data'][0]['url']
-            data.update(url=image_url)
-            return data
-
-    def new_mad_lib(self, native_language, target_language, fluency):
-        prompt = load_prompt(
-            "arcade-mad-libs-create",
-            native_language=native_language,
-            target_language=target_language,
-            fluency=fluency,
-        )
-        response = self._chatbot.generate(prompt, max_tokens=300)
-        try:
-            response = response.replace("```json", "").replace("```", "")
-            start = response.find("{")
-            payload = response[start:]
-            data = json.loads(payload)
-            return data
-        except json.decoder.JSONDecodeError as e:
-            st.error(e)
-            st.write(response)
-
-    def grade_mad_lib(self, native_language, target_language, fluency, original, words):
-        prompt = load_prompt(
-            "arcade-mad-libs-grade",
-            native_language=native_language,
-            target_language=target_language,
-            fluency=fluency,
-            original=original,
-            words=words,
-        )
-        response = self._chatbot.generate(prompt, max_tokens=650)
-        try:
-            response = response.replace("```json", "").replace("```", "")
-            start = response.find("{")
-            payload = response[start:]
-            data = json.loads(payload)
-            return data
-        except json.decoder.JSONDecodeError as e:
-            st.error(e)
-            st.write(response)
-
-    def new_odd_one_out(self, native_language, target_language, fluency):
-        prompt = load_prompt(
-            "arcade-odd-one-out",
-            native_language=native_language,
-            target_language=target_language,
-            fluency=fluency,
-        )
-        response = self._chatbot.generate(prompt, max_tokens=650)
-        try:
-            response = response.replace("```json", "").replace("```", "")
-            start = response.find("{")
-            payload = response[start:]
-            data = json.loads(payload)
-            return data
-        except json.decoder.JSONDecodeError as e:
-            st.error(e)
-            st.write(response)
 
 
 def render_board(game_state):
@@ -138,18 +29,19 @@ def render_board(game_state):
     return markdown_table
 
 
-def play_jeopardy(native_language_name, target_language_name, fluency):
-    chatbot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
-    arcade = Arcade(chatbot)
+def play_jeopardy(user, tutor):
+    game = service.Service(
+        "arcade-jeopardy",
+        user=user,
+        tutor=tutor,
+        max_tokens=200,
+    )
     if st.button("New Game"):
         with st.spinner():
-            board = arcade.new_jeopardy_game(
-                native_language=native_language_name,
-                target_language=target_language_name,
-                fluency=fluency,
-            )
-            st.session_state["jeopardy-board"] = board
-    board = st.session_state.get("jeopardy-board")
+            data = game.run(fluency=user.fluency())
+        st.session_state["jeopardy.board"] = data
+
+    board = st.session_state.get("jeopardy.board")
     if not board:
         return
     st.markdown(render_board(board))
@@ -165,9 +57,10 @@ def play_jeopardy(native_language_name, target_language_name, fluency):
     if st.button("Go"):
         index = categories.index(category)
         question = board["categories"][index]["questions"][points // 200 - 1]
-        st.session_state["current_question"] = question
-    if st.session_state.get("current_question"):
-        question = st.session_state["current_question"]
+        st.session_state["jeopardy.question"] = question
+
+    if st.session_state.get("jeopardy.question"):
+        question = st.session_state["jeopardy.question"]
         if question.get("is_answered"):
             st.error("You've already answered this question!")
             return
@@ -180,20 +73,28 @@ def play_jeopardy(native_language_name, target_language_name, fluency):
             st.error("Unfortunately, that's not correct.")
         else:
             st.success("Good job!")
-        del st.session_state["current_question"]
+        del st.session_state["jeopardy.question"]
 
 
-def play_pictionary(native_language, target_language, fluency):
-    model = anthropic.Claude(ANTHROPIC_API_KEY)
-    arcade = Arcade(model)
+def play_pictionary(user, tutor):
+    game = service.Service(
+        "arcade-pitctionary",
+        user=user,
+        tutor=tutor,
+        max_tokens=200,
+    )
     if st.button("New Game"):
         with st.spinner():
-            data = arcade.new_pictionary_game(
-                native_language=native_language,
-                target_language=target_language,
-                fluency=fluency,
+            data = game.run(fluency=user.fluency())
+            response = openai.Image.create(
+                prompt=data["prompt"],
+                n=1,
+                size="256x256",
             )
-            st.session_state["pitctionary"] = data
+        image_url = response['data'][0]['url']
+        data.update(url=image_url)
+        st.session_state["pitctionary"] = data
+
     data = st.session_state.get("pitctionary")
     if not data:
         return
@@ -210,17 +111,18 @@ def play_pictionary(native_language, target_language, fluency):
             st.error(f"Sorry, the word was actually {word} ({translation})")
 
 
-def play_mad_libs(native_language, target_language, fluency):
-    model = anthropic.Claude(ANTHROPIC_API_KEY)
-    arcade = Arcade(model)
+def play_mad_libs(user, tutor):
+    game = service.Service(
+        "arcade-mad-libs-create",
+        user=user,
+        tutor=tutor,
+        max_tokens=300,
+    )
     if st.button("New Game"):
         with st.spinner():
-            data = arcade.new_mad_lib(
-                native_language=native_language,
-                target_language=target_language,
-                fluency=fluency,
-            )
-            st.session_state["mad-libs"] = data
+            data = game.run(fluency=user.fluency())
+        st.session_state["mad-libs"] = data
+
     data = st.session_state.get("mad-libs")
     if not data:
         return
@@ -232,11 +134,15 @@ def play_mad_libs(native_language, target_language, fluency):
         with cols[i % 3]:
             answers.append(st.text_input(blank, key=i))
     if st.button("Submit"):
+        grader = service.Service(
+            "arcade-mad-libs-grade",
+            user=user,
+            tutor=tutor,
+            max_tokens=650,
+        )
         with st.spinner():
-            data = arcade.grade_mad_lib(
-                native_language=native_language,
-                target_language=target_language,
-                fluency=fluency,
+            data = grader.run(
+                fluency=user.fluency(),
                 original=text,
                 words=answers,
             )
@@ -245,20 +151,22 @@ def play_mad_libs(native_language, target_language, fluency):
         st.metric("Total Points", data["points"])
 
 
-def play_odd_one_out(native_language, target_language, fluency):
-    model = anthropic.Claude(ANTHROPIC_API_KEY)
-    arcade = Arcade(model)
+def play_odd_one_out(user, tutor):
     view_native = st.checkbox("Native View")
+    game = service.Service(
+        "arcade-odd-one-out",
+        user=user,
+        tutor=tutor,
+        native_mode=view_native,
+        max_tokens=650,
+    )
     if st.button("New Game"):
         with st.spinner():
-            data = arcade.new_odd_one_out(
-                native_language=native_language,
-                target_language=target_language,
-                fluency=fluency,
-            )
-            st.session_state["odd-one-out"] = data
+            data = game.run(fluency=user.fluency())
+        st.session_state["odd-one-out"] = data
+
     data = st.session_state.get("odd-one-out")
-    language = native_language if view_native else target_language
+    language = game.current_language()
     if not data or language not in data:
         return
     words = data[language]["words"]
@@ -280,12 +188,29 @@ def play_odd_one_out(native_language, target_language, fluency):
 def main():
     st.title('Arcade')
 
-    native_language = st.sidebar.selectbox("Native Language", options=LANGUAGES)
+    languages = list(entity.LANGUAGES)
+    default_native_lang = st.session_state.get("user.native_lang", languages[0])
+    default_target_lang = st.session_state.get("user.target_lang", languages[4])
+    default_fluency = st.session_state.get("user.fluency", 3)
+    native_language = st.sidebar.selectbox(
+        "Native Language", options=entity.LANGUAGES,
+        index=languages.index(default_native_lang),
+    )
     target_language = st.sidebar.selectbox(
-        "Target Language", options=LANGUAGES, index=12)
-    native_language_name = LANGUAGES[native_language]["name"]
-    target_language_name = LANGUAGES[target_language]["name"]
-    fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
+        "Choose Language", options=entity.LANGUAGES,
+        index=languages.index(default_target_lang),
+    )
+    fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1,
+                                value=default_fluency)
+    user = entity.User(
+        native_language=native_language,
+        target_language=target_language,
+        fluency=fluency,
+    )
+    st.session_state["user.native_lang"] = native_language
+    st.session_state["user.target_lang"] = target_language
+    st.session_state["user.fluency"] = fluency
+    tutor = entity.get_tutor("Claude", key=ANTHROPIC_API_KEY)
 
     games = [
         "Pictionary",
@@ -296,13 +221,13 @@ def main():
     game_name = st.selectbox("Select Game", options=games)
 
     if game_name == "Jeopardy":
-        play_jeopardy(native_language_name, target_language_name, fluency)
+        play_jeopardy(user, tutor)
     elif game_name == "Pictionary":
-        play_pictionary(native_language_name, target_language_name, fluency)
+        play_pictionary(user, tutor)
     elif game_name == "Mad Libs":
-        play_mad_libs(native_language_name, target_language_name, fluency)
+        play_mad_libs(user, tutor)
     elif game_name == "Odd One Out":
-        play_odd_one_out(native_language_name, target_language_name, fluency)
+        play_odd_one_out(user, tutor)
 
 
 if __name__ == "__main__":
