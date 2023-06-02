@@ -1,5 +1,7 @@
 import typing
 
+from vocava import llm
+
 Language: typing.TypeAlias = str
 LANGUAGES: dict[Language, dict[str, str]] = {
     "🇺🇸 English": {"name": "English", "flag": "🇺🇸", "code": "en"},
@@ -45,4 +47,8 @@ class User:
 
 
 class Tutor:
-    pass
+    def __init__(self, model: llm.LanguageModel):
+        self._model = model
+
+    def ask(self, prompt: str, max_tokens: int = 250):
+        self._model.generate(prompt, max_tokens=max_tokens)

@@ -1,4 +1,3 @@
-import llm
 import llm.prompt
 from vocava import entity
 
@@ -6,9 +5,9 @@ JSON = None | bool | int | float | str | dict[str, "JSON"] | list["JSON"]
 
 
 class Service:
-    def __init__(self, name: str, user: entity.User, model: llm.LanguageModel,
+    def __init__(self, name: str, user: entity.User, tutor: entity.Tutor,
                  native_mode: bool = False, max_tokens: int = 250):
-        self._model = model
+        self._tutor = tutor
         self._name = name
         self._user = user
         self._native_mode = native_mode
@@ -32,5 +31,5 @@ class Service:
             target_language=self._user.target_language_name(),
             **kwargs
         )
-        response = self._model.generate(prompt, max_tokens=self._max_tokens)
+        response = self._tutor.ask(prompt, max_tokens=self._max_tokens)
         return llm.prompt.extract_json(response)
