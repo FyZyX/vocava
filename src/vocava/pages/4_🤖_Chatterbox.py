@@ -10,7 +10,7 @@ from vocava import storage
 from vocava.llm import anthropic, mock, LanguageModel
 from vocava.llm.prompt import load_prompt
 from vocava.st_custom_components import st_audiorec
-from vocava.translate import LANGUAGES
+from vocava.service import LANGUAGES, Service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
@@ -173,6 +173,13 @@ def main():
     view_native = st.sidebar.checkbox("View in native language")
 
     user = User(fluency)
+    chatterbox = Service(
+        name="chatterbox",
+        native_language=native_language_name,
+        target_language=target_language_name,
+        model=bot,
+        max_tokens=150,
+    )
     chatterbox = Chatterbox(
         user=user,
         user_language=native_language_name,
