@@ -69,10 +69,13 @@ def play_jeopardy(user, tutor):
         if not answer:
             return
         question["is_answered"] = True
-        if answer != question["answer"]:
-            st.error("Unfortunately, that's not correct.")
+        # TODO: embed and compare semantic similarity
+        actual = answer.strip().strip(".").lower()
+        expected = question["answer"].strip().strip(".").lower()
+        if actual == expected:
+            st.success(question["answer"])
         else:
-            st.success("Good job!")
+            st.error(question["answer"])
         del st.session_state["jeopardy.question"]
 
 

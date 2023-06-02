@@ -1,9 +1,7 @@
 Act as a language teacher for a student learning {$target_language} (fluency ${fluency} / 10}) and let's play jeopardy.
-Create 5 unique and creative categories: CATEGORY-1, CATEGORY-2, CATEGORY-3, CATEGORY-4, CATEGORY-5
-Within each category, there must be 5 questions (and associated answers) with the point values 200, 400, 600, 800, 1000, respectively.
+Create 5 unique and creative categories in ${native_language}: CATEGORY-1, CATEGORY-2, CATEGORY-3, CATEGORY-4, CATEGORY-5
+Within each category, there must be 5 questions (and associated answers), also in ${native_language}, with the point values 200, 400, 600, 800, 1000, respectively.
 Each question should help with some aspect of language learning. Answers should always be in ($target_language).
-For fluency 3 and below, keep the category names and questions in ${native_language}
-For fluency 4 and above, provide the category names and questions in ${target_language}
 
 You MUST include ALL 5 CATEGORIES and ALL 5 QUESTIONS for each category:
 - Create all 5 categories, give the appropriate names, don't use the placeholders
