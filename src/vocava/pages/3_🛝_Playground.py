@@ -105,18 +105,14 @@ def main():
         fluency=fluency,
     )
 
-    activities = [
-        "Translation Practice",
-        "Vocabulary Practice",
-        "Grammar Practice",
-    ]
+    activities = {
+        "Translation Practice": translation_practice,
+        "Vocabulary Practice": vocabulary_practice,
+        "Grammar Practice": grammar_practice,
+    }
     activity = st.selectbox("Choose an activity", activities)
-    if activity == "Translation Practice":
-        translation_practice(user, tutor)
-    elif activity == "Vocabulary Practice":
-        vocabulary_practice(user, tutor)
-    elif activity == "Grammar Practice":
-        grammar_practice(user, tutor)
+    start_activity = activities.get(activity)
+    start_activity(user, tutor)
 
 
 if __name__ == "__main__":
