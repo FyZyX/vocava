@@ -42,3 +42,7 @@ class User:
 
     def fluency(self):
         return self._fluency
+
+
+class Tutor:
+    pass
