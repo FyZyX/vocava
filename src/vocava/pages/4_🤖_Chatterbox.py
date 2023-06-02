@@ -6,45 +6,27 @@ import openai
 import streamlit as st
 from streamlit_chat import message as chat_message
 
-from vocava import storage
-from vocava.llm import anthropic, mock, LanguageModel
+from vocava import storage, entity
+from vocava.llm import LanguageModel
 from vocava.llm.prompt import load_prompt
+from vocava.service import Service
 from vocava.st_custom_components import st_audiorec
-from vocava.service import LANGUAGES, Service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
 openai.api_key = st.secrets["openai_api_key"]
 
 
-class User:
-    def __init__(self, fluency):
-        self._fluency = fluency
+def get_audio_transcript():
+    data = st_audiorec()
+    if not data:
+        return None
 
-    @staticmethod
-    def _get_text(default=""):
-        return st.text_input("Enter a Message", default)
-
-    @staticmethod
-    def _get_audio_transcript():
-        data = st_audiorec()
-        if not data:
-            return None
-
-        file = io.BytesIO(data)
-        file.name = "tmp.wav"
-        with st.spinner():
-            response = openai.Audio.transcribe("whisper-1", file)
-        return response["text"]
-
-    def get_input(self, input_method):
-        if input_method == "Text Input":
-            return self._get_text()
-        elif input_method == "Voice Input":
-            return self._get_audio_transcript()
-
-    def fluency(self):
-        return self._fluency
+    file = io.BytesIO(data)
+    file.name = "tmp.wav"
+    with st.spinner():
+        response = openai.Audio.transcribe("whisper-1", file)
+    return response["text"]
 
 
 class Interaction:
@@ -87,7 +69,7 @@ class Interaction:
 
 
 class Chatterbox:
-    def __init__(self, user: User, user_language: str,
+    def __init__(self, user: entity.User, user_language: str,
                  bot: LanguageModel, bot_language: str):
         self._user = user
         self._user_language = user_language
@@ -157,40 +139,40 @@ def main():
     db = storage.VectorStore(COHERE_API_KEY)
     db.connect()
 
-    if st.sidebar.checkbox("DEBUG Mode", value=True):
-        bot = mock.MockLanguageModel()
-    else:
-        bot = anthropic.ClaudeChatBot(ANTHROPIC_API_KEY)
+    debug_mode = st.sidebar.checkbox("DEBUG Mode", value=True)
+    model = "Claude" if not debug_mode else "mock"
+    tutor = entity.get_tutor(model, key=ANTHROPIC_API_KEY)
 
-    native_language = st.sidebar.selectbox("Native Language", options=LANGUAGES)
+    native_language = st.sidebar.selectbox("Native Language", options=entity.LANGUAGES)
     target_language = st.sidebar.selectbox(
-        "Choose Language", options=LANGUAGES, index=4)
-    native_language_name = LANGUAGES[native_language]["name"]
-    target_language_name = LANGUAGES[target_language]["name"]
+        "Choose Language", options=entity.LANGUAGES, index=4)
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
+    user = entity.User(
+        native_language=native_language,
+        target_language=target_language,
+        fluency=fluency,
+    )
 
     input_method = st.sidebar.radio("Input method", ("Text Input", "Voice Input"))
     view_native = st.sidebar.checkbox("View in native language")
 
-    user = User(fluency)
     chatterbox = Service(
         name="chatterbox",
-        native_language=native_language_name,
-        target_language=target_language_name,
-        model=bot,
-        max_tokens=150,
-    )
-    chatterbox = Chatterbox(
         user=user,
-        user_language=native_language_name,
-        bot=bot,
-        bot_language=target_language_name,
+        tutor=tutor,
+        max_tokens=150,
+        native_mode=view_native,
     )
-    user_input = user.get_input(input_method)
+    if input_method == "Text Input":
+        user_input = st.text_input("Enter a Message")
+    elif input_method == "Voice Input":
+        user_input = get_audio_transcript()
+    else:
+        return
+
     if st.button("Send"):
         with st.spinner():
-            interaction, corrected, explanation = chatterbox.start_interaction(
-                user_input, native_mode=view_native)
+            interaction, corrected, explanation = chatterbox.run(message=user_input)
 
         if interaction:
             db.save_interaction(interaction)
@@ -201,7 +183,7 @@ def main():
         st.warning(corrected)
         st.info(explanation)
 
-    language = native_language_name if view_native else target_language_name
+    language = chatterbox.current_language()
     for i, interaction in enumerate(chatterbox.interactions()):
         chat_message(interaction["bot"][language], key=f"{i}")
         chat_message(interaction["user"][language], is_user=True, key=f"{i}_user")
