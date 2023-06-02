@@ -29,110 +29,6 @@ def get_audio_transcript():
     return response["text"]
 
 
-class Interaction:
-    def __init__(self, documents, start_language, end_language):
-        self._documents = documents
-        self._start_language = start_language
-        self._end_language = end_language
-
-    def ids(self):
-        message_id = int(time.time())
-        return [
-            f"{message_id}-user-{self._start_language}",
-            f"{message_id}-user-{self._end_language}",
-            f"{message_id}-bot-{self._end_language}",
-            f"{message_id}-bot-{self._start_language}",
-        ]
-
-    def documents(self):
-        return self._documents
-
-    def metadata(self):
-        return [
-            {"language": self._start_language},
-            {"language": self._end_language},
-            {"language": self._end_language},
-            {"language": self._start_language},
-        ]
-
-    def json(self):
-        return {
-            "user": {
-                self._start_language: self._documents[0],
-                self._end_language: self._documents[1],
-            },
-            "bot": {
-                self._end_language: self._documents[2],
-                self._start_language: self._documents[3],
-            },
-        }
-
-
-class Chatterbox:
-    def __init__(self, user: entity.User, user_language: str,
-                 bot: LanguageModel, bot_language: str):
-        self._user = user
-        self._user_language = user_language
-        self._bot = bot
-        self._bot_language = bot_language
-        if "history" not in st.session_state:
-            st.session_state["history"] = []
-        self._interactions = st.session_state["history"]
-
-    def _send_message(
-            self, message: str, native_mode: bool
-    ) -> tuple[Interaction, str | None, str | None]:
-        template = "chatterbox-native" if native_mode else "chatterbox-target"
-        prompt = load_prompt(
-            template,
-            native_language=self._user_language,
-            target_language=self._bot_language,
-            fluency=self._user.fluency(),
-            conversation_history=self._interactions,
-            message=message,
-        )
-        response = self._bot.generate(prompt, max_tokens=5_000)
-        try:
-            start = response.find("{")
-            payload = response[start:]
-            data = json.loads(payload)
-            return self._add_to_history(data)
-        except json.decoder.JSONDecodeError:
-            st.write(response)
-
-    def _add_to_history(self, data) -> tuple[Interaction, str | None, str | None]:
-        corrected = data["interaction"]["user"].get(f"{self._bot_language}_corrected")
-        explanation = data["interaction"]["user"].get(
-            f"{self._user_language}_explanation")
-        docs = [
-            data["interaction"]["user"][self._user_language],
-            corrected or data["interaction"]["user"][self._bot_language],
-            data["interaction"]["bot"][self._bot_language],
-            data["interaction"]["bot"][self._user_language],
-        ]
-        interaction = Interaction(
-            docs, self._user_language, self._bot_language
-        )
-        self._interactions.append(interaction.json())
-        return interaction, corrected, explanation
-
-    def start_interaction(
-            self, user_input, native_mode: bool
-    ) -> tuple[Interaction, str | None, str | None] | tuple[None, None, None]:
-        # streamlit rerender hack
-        skip = False
-        if len(self._interactions) > 0:
-            last_input = self._interactions[-1]["user"][self._user_language]
-            skip = user_input == last_input
-
-        if not skip:
-            return self._send_message(user_input, native_mode)
-        return None, None, None
-
-    def interactions(self):
-        return self._interactions[::-1]
-
-
 def main():
     st.header("Chatterbox")
 
@@ -163,6 +59,9 @@ def main():
     else:
         return
 
+    if "chatterbox.history" not in st.session_state:
+        st.session_state["chatterbox.history"] = []
+
     if st.button("Send"):
         chatterbox = Service(
             name="chatterbox",
@@ -171,22 +70,42 @@ def main():
             max_tokens=150,
             native_mode=view_native,
         )
+        history = st.session_state["chatterbox.history"]
+        chat_history = "\n".join([
+            f'USER: {interaction["user"][user.target_language_name()]}\n'
+            f'TUTOR: {interaction["tutor"][user.target_language_name()]}'
+            for interaction in history
+        ])
         with st.spinner():
-            interaction, corrected, explanation = chatterbox.run(message=user_input)
+            data = chatterbox.run(history=chat_history, message=user_input)
 
+        interaction = data["interaction"]
         if interaction:
             db.save_interaction(interaction)
-    else:
-        interaction, corrected, explanation = None, None, None
+        st.session_state["chatterbox.history"].append(interaction)
+        st.session_state["chatterbox.language"] = chatterbox.current_language()
 
+    history = st.session_state["chatterbox.history"][::-1]
+    if not history:
+        return
+    last_interaction = history[0]
+
+    language = st.session_state["chatterbox.language"]
+    user_message = last_interaction["user"][language]
+    tutor_message = last_interaction["tutor"][language]
+    corrected = last_interaction["user"].get(
+        f"{user.target_language_name()}_corrected"
+    )
+    explanation = last_interaction["user"].get(
+        f"{user.native_language_name()}_explanation"
+    )
     if corrected:
         st.warning(corrected)
         st.info(explanation)
 
-    language = chatterbox.current_language()
-    for i, interaction in enumerate(chatterbox.interactions()):
-        chat_message(interaction["bot"][language], key=f"{i}")
-        chat_message(interaction["user"][language], is_user=True, key=f"{i}_user")
+    for i, interaction in enumerate(history):
+        chat_message(tutor_message, key=f"{i}")
+        chat_message(user_message, is_user=True, key=f"{i}_user")
 
 
 if __name__ == "__main__":
