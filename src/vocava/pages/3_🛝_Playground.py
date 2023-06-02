@@ -8,14 +8,14 @@ ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
 def translation_practice(user: entity.User, tutor: entity.Tutor):
     if st.button("Start"):
-        translation_practice = Service(
+        service = Service(
             name="playground-generate-translation-practice",
             user=user,
             tutor=tutor,
             max_tokens=500,
         )
         with st.spinner():
-            data = translation_practice.run(fluency=user.fluency())
+            data = service.run(fluency=user.fluency())
         st.session_state["exercises"] = data["exercises"]
     vocabulary = st.session_state.get("exercises", [])
     for i, grammar_item in enumerate(vocabulary):
@@ -28,16 +28,16 @@ def translation_practice(user: entity.User, tutor: entity.Tutor):
             st.success(grammar_item[user.native_language_name()])
 
 
-def vocabular_practice(user: entity.User, tutor: entity.Tutor):
+def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
     if st.button("Start"):
-        vocabulary_practice = Service(
+        service = Service(
             name="playground-generate-vocabulary-practice",
             user=user,
             tutor=tutor,
             max_tokens=500,
         )
         with st.spinner():
-            data = vocabulary_practice.run(
+            data = service.run(
                 fluency=user.fluency(),
                 known_vocabulary=user.known_vocabulary(),
             )
@@ -59,16 +59,14 @@ def vocabular_practice(user: entity.User, tutor: entity.Tutor):
 
 def grammar_practice(user: entity.User, tutor: entity.Tutor):
     if st.button("Start"):
-        grammar_practice = Service(
+        service = Service(
             name="playground-generate-grammar-practice",
             user=user,
             tutor=tutor,
             max_tokens=500,
         )
         with st.spinner():
-            data = grammar_practice.run(
-                native_language=user.native_language_name(),
-                target_language=user.target_language_name(),
+            data = service.run(
                 fluency=user.fluency(),
                 known_phrases=user.known_phrases(),
             )
@@ -116,7 +114,7 @@ def main():
     if activity == "Translation Practice":
         translation_practice(user, tutor)
     elif activity == "Vocabulary Practice":
-        vocabular_practice(user, tutor)
+        vocabulary_practice(user, tutor)
     elif activity == "Grammar Practice":
         grammar_practice(user, tutor)
 
