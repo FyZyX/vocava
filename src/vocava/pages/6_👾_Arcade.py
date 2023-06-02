@@ -34,7 +34,7 @@ def play_jeopardy(user, tutor):
         "arcade-jeopardy",
         user=user,
         tutor=tutor,
-        max_tokens=200,
+        max_tokens=5_000,
     )
     if st.button("New Game"):
         with st.spinner():
@@ -101,14 +101,17 @@ def play_pictionary(user, tutor):
     word = data["word"]
     translation = data["translation"]
     url = data["url"]
-    st.image(url)
-    guess = st.text_input("Guess").lower()
-    if st.button("Guess"):
-        if guess == data["word"].lower():
-            st.success("Good job!")
-        else:
-            st.info(data["prompt"])
-            st.error(f"Sorry, the word was actually {word} ({translation})")
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(url)
+    with cols[1]:
+        guess = st.text_input("Guess").lower()
+        if st.button("Guess"):
+            if guess == data["word"].lower():
+                st.success("Good job!")
+            else:
+                st.info(data["prompt"])
+                st.error(f"Sorry, the word was actually {word} ({translation})")
 
 
 def play_mad_libs(user, tutor):
