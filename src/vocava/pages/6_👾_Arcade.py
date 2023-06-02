@@ -30,6 +30,9 @@ def render_board(game_state):
 
 
 def play_jeopardy(user, tutor):
+    if "jeopardy.score" not in st.session_state:
+        st.session_state["jeopardy.score"] = 0
+
     game = service.Service(
         "arcade-jeopardy",
         user=user,
@@ -40,6 +43,7 @@ def play_jeopardy(user, tutor):
         with st.spinner():
             data = game.run(fluency=user.fluency())
         st.session_state["jeopardy.board"] = data
+        st.session_state["jeopardy.score"] = 0
 
     board = st.session_state.get("jeopardy.board")
     if not board:
@@ -74,9 +78,11 @@ def play_jeopardy(user, tutor):
         expected = question["answer"].strip().strip(".").lower()
         if actual == expected:
             st.success(question["answer"])
+            st.session_state["jeopardy.score"] += points
         else:
             st.error(question["answer"])
         del st.session_state["jeopardy.question"]
+    st.metric(label="Score", value=st.session_state["jeopardy.score"])
 
 
 def play_pictionary(user, tutor):
