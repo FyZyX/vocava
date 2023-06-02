@@ -26,7 +26,7 @@ def get_audio_transcript():
 
 
 def main():
-    st.header("Chatterbox")
+    st.title("Chatterbox")
 
     db = storage.VectorStore(COHERE_API_KEY)
     db.connect()
@@ -63,7 +63,7 @@ def main():
             name="chatterbox-native" if view_native else "chatterbox-target",
             user=user,
             tutor=tutor,
-            max_tokens=150,
+            max_tokens=300,
             native_mode=view_native,
         )
         history = st.session_state["chatterbox.history"]
@@ -104,7 +104,10 @@ def main():
 
     for i, interaction in enumerate(history):
         chat_message(interaction["tutor"][language], key=f"{i}")
-        chat_message(interaction["user"][language], is_user=True, key=f"{i}_user")
+        show_corrected = corrected and not view_native
+        corrected_language = f"{language}_corrected" if show_corrected else language
+        chat_message(interaction["user"][corrected_language],
+                     is_user=True, key=f"{i}_user")
 
 
 if __name__ == "__main__":

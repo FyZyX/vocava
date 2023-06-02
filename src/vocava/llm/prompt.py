@@ -18,4 +18,5 @@ def extract_json(content):
     try:
         return json.loads(payload)
     except json.decoder.JSONDecodeError as e:
-        raise ValueError("Invalid JSON returned by model") from e
+        print(payload)
+        raise ValueError(f"Invalid JSON returned by model:\n{payload}") from e
