@@ -36,41 +36,31 @@ def main():
     st.session_state["user.target_lang"] = target_language
     st.session_state["user.fluency"] = fluency
 
-    culture_info = {
-        "en": {
-            "places_to_visit": ["New York", "Los Angeles", "Chicago"],
-            "cuisine": ["Burger", "Pizza", "Fried Chicken"],
-            "local_politics": ["US is a democratic country with a multi-party system.",
-                               "The two major parties are the Democrats and Republicans."],
-            "slang_idioms": ["Bite the bullet", "Break a leg", "Hit the sack"],
-        },
-        "fr": {
-            "places_to_visit": ["Paris", "Marseille", "Lyon"],
-            "cuisine": ["Baguette", "Croissant", "Coq au vin"],
-            "local_politics": [
-                "France is a democratic country with a semi-presidential system.",
-                "The president is the head of the state."],
-            "slang_idioms": ["C'est la vie", "Coup de foudre", "Bon appetit"],
-        },
-        # Add more languages...
-    }
+    culture_service = Service("culture", user=user, tutor=tutor)
+    trip_service = Service("trip", user=user, tutor=tutor)
+    faux_pas_service = Service("faux_pas", user=user, tutor=tutor)
 
-    if user.target_language_name() in culture_info:
-        info = culture_info[user.target_language_name()]
+    culture_info = culture_service.run()
+    trip_info = trip_service.run()
+    faux_pas_info = faux_pas_service.run()
 
-        st.markdown("## Places to visit")
-        st.markdown(", ".join(info['places_to_visit']))
+    st.markdown("## Places to visit")
+    st.markdown(", ".join(culture_info.get('places_to_visit', [])))
 
-        st.markdown("## Cuisine")
-        st.markdown(", ".join(info['cuisine']))
+    st.markdown("## Cuisine")
+    st.markdown(", ".join(culture_info.get('cuisine', [])))
 
-        st.markdown("## Local Politics")
-        st.markdown("\n".join(info['local_politics']))
+    st.markdown("## Local Politics")
+    st.markdown("\n".join(culture_info.get('local_politics', [])))
 
-        st.markdown("## Slang and Idioms")
-        st.markdown(", ".join(info['slang_idioms']))
-    else:
-        st.write("Sorry, we don't have information for this language yet.")
+    st.markdown("## Slang and Idioms")
+    st.markdown(", ".join(culture_info.get('slang_idioms', [])))
+
+    st.markdown("## Plan a Trip")
+    st.markdown("\n".join(trip_info))
+
+    st.markdown("## Cultural Faux Pas")
+    st.markdown("\n".join(faux_pas_info))
 
 
 if __name__ == "__main__":
