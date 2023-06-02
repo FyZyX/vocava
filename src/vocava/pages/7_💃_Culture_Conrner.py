@@ -38,16 +38,13 @@ def main():
     st.session_state["user.target_lang"] = target_language
     st.session_state["user.fluency"] = fluency
 
-    services = {
-        "Culture Info": Service("culture-info", user=user, tutor=tutor),
-        "Plan a Trip": Service("culture-trip", user=user, tutor=tutor),
-        "Cultural Faux Pas": Service("culture-faux-pas", user=user, tutor=tutor)
-    }
+    services = [
+        "Culture Info",
+        "Plan a Trip",
+        "Cultural Faux Pas",
+    ]
 
-    service_choice = st.selectbox(
-        "Choose a Service", options=list(services.keys())
-    )
-    selected_service = services[service_choice]
+    service_choice = st.selectbox("Choose a Service", options=services)
     st.divider()
 
     if service_choice == "Culture Info":
@@ -62,6 +59,7 @@ def main():
             with st.spinner():
                 service_info = selected_service.run(fluency=user.fluency())
             st.session_state["culture.info"] = service_info
+
         if "culture.info" in st.session_state:
             service_info = st.session_state["culture.info"]
             st.markdown(service_info)
@@ -106,13 +104,37 @@ def main():
                     fluency=user.fluency(),
                 )
             st.session_state["culture.trip"] = trip_info
+
         if "culture.trip" in st.session_state:
             trip_info = st.session_state["culture.trip"]
             st.markdown(trip_info)
 
     elif service_choice == "Cultural Faux Pas":
-        service_info = selected_service.run()
-        st.markdown("\n".join(service_info))
+        cols = st.columns(2)
+        with cols[0]:
+            country = st.text_input("Country")
+        with cols[1]:
+            region = st.text_input("Region or City (Optional)")
+
+        if st.button("Get Cultural Faux Pas"):
+            selected_service = Service(
+                "culture-faux-pas",
+                user=user,
+                tutor=tutor,
+                max_tokens=2_000,
+                extract_json=False,
+            )
+            with st.spinner():
+                faux_pas_info = selected_service.run(
+                    country=country,
+                    region=region,
+                    fluency=user.fluency(),
+                )
+            st.session_state["culture.faux_pas"] = faux_pas_info
+
+        if "culture.faux_pas" in st.session_state:
+            faux_pas_info = st.session_state["culture.faux_pas"]
+            st.markdown(faux_pas_info)
 
 
 if __name__ == "__main__":
