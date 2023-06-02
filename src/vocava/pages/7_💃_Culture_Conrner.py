@@ -36,31 +36,40 @@ def main():
     st.session_state["user.target_lang"] = target_language
     st.session_state["user.fluency"] = fluency
 
-    culture_service = Service("culture", user=user, tutor=tutor)
-    trip_service = Service("trip", user=user, tutor=tutor)
-    faux_pas_service = Service("faux_pas", user=user, tutor=tutor)
+    services = {
+        "Culture Info": Service("culture-info", user=user, tutor=tutor),
+        "Plan a Trip": Service("culture-trip", user=user, tutor=tutor),
+        "Cultural Faux Pas": Service("culture-faux-pas", user=user, tutor=tutor)
+    }
 
-    culture_info = culture_service.run()
-    trip_info = trip_service.run()
-    faux_pas_info = faux_pas_service.run()
+    service_choice = st.selectbox(
+        "Choose a Service", options=list(services.keys())
+    )
+    selected_service = services[service_choice]
 
-    st.markdown("## Places to visit")
-    st.markdown(", ".join(culture_info.get('places_to_visit', [])))
+    if service_choice == "Culture Info":
+        if st.button("Create Guide"):
+            selected_service = Service(
+                "culture-info",
+                user=user,
+                tutor=tutor,
+                max_tokens=2_000,
+                extract_json=False,
+            )
+            with st.spinner():
+                service_info = selected_service.run(fluency=user.fluency())
+            st.session_state["culture.info"] = service_info
+        if "culture.info" in st.session_state:
+            service_info = st.session_state["culture.info"]
+            st.markdown(service_info)
 
-    st.markdown("## Cuisine")
-    st.markdown(", ".join(culture_info.get('cuisine', [])))
+    elif service_choice == "Plan a Trip":
+        service_info = selected_service.run()
+        st.markdown("\n".join(service_info))
 
-    st.markdown("## Local Politics")
-    st.markdown("\n".join(culture_info.get('local_politics', [])))
-
-    st.markdown("## Slang and Idioms")
-    st.markdown(", ".join(culture_info.get('slang_idioms', [])))
-
-    st.markdown("## Plan a Trip")
-    st.markdown("\n".join(trip_info))
-
-    st.markdown("## Cultural Faux Pas")
-    st.markdown("\n".join(faux_pas_info))
+    elif service_choice == "Cultural Faux Pas":
+        service_info = selected_service.run()
+        st.markdown("\n".join(service_info))
 
 
 if __name__ == "__main__":

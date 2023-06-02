@@ -6,12 +6,14 @@ JSON = None | bool | int | float | str | dict[str, "JSON"] | list["JSON"]
 
 class Service:
     def __init__(self, name: str, user: entity.User, tutor: entity.Tutor,
-                 native_mode: bool = False, max_tokens: int = 250):
+                 native_mode: bool = False, max_tokens: int = 250,
+                 extract_json: bool = True):
         self._tutor = tutor
         self._name = name
         self._user = user
         self._native_mode = native_mode
         self._max_tokens = max_tokens
+        self._extract_json = extract_json
 
     def toggle_native_mode(self):
         self._native_mode = not self._native_mode
@@ -32,4 +34,7 @@ class Service:
             **kwargs
         )
         response = self._tutor.ask(prompt, max_tokens=self._max_tokens)
-        return llm.prompt.extract_json(response)
+        if self._extract_json:
+            return llm.prompt.extract_json(response)
+        else:
+            return response
