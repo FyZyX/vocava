@@ -1,5 +1,4 @@
 # Vocava
-1. **Language Selection and Fluency Adjustment**: Users can select their native language and the target language for the conversation from a list of options. Users can also set their fluency level in the target language using a slider.
 1. **User and Tutor Setup**: It initializes a 'user' object that stores the user's native language, target language, and fluency level. These are stored in the Streamlit session state to persist across reruns. A 'tutor' is also created using an API key. The tutor model can be switched between "Claude" and "mock" based on the DEBUG mode checkbox.
 
 ## User Preferences
@@ -8,8 +7,7 @@
 3. **Native Language Option**: A checkbox labeled 'View in native language' allows users to decide whether to have the story and comprehension questions displayed in their native language or the target language.
 
 ## Session State
-1. **Persistence of Data**: The state of the session, including selected languages, fluency, and fetched articles, is maintained throughout the user's session.
-6. **Persistence of Data**: The state of the session, including selected languages, fluency, and game progress, is maintained throughout the user's session.
+1. **Persistence of Data**: The state of the session, including selected languages, fluency, game progress, and fetched articles, is maintained throughout the user's session.
 
 ## Translation
 
