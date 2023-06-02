@@ -4,7 +4,7 @@ Note that my TARGET_INPUT will be in ${target_language}, the language I am learn
 You'll also translate both my corrected input and your output into ${native_language} (NATIVE_INPUT and NATIVE_OUTPUT respectively) to help me learn.
 
 Here is our previous CONVERSATION_HISTORY:
-${conversation_history}
+${history}
 
 Here is my next TARGET_INPUT:
 ${message}

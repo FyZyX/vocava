@@ -65,7 +65,7 @@ class User:
         return self._get_language_name(self._native_language)
 
     def target_language_name(self) -> str:
-        return self._get_language_name(self._native_language)
+        return self._get_language_name(self._target_language)
 
     def known_vocabulary(self):
         return self._vocabulary.get(self.target_language_name())
@@ -82,7 +82,7 @@ class Tutor:
         self._model = model
 
     def ask(self, prompt: str, max_tokens: int = 250):
-        self._model.generate(prompt, max_tokens=max_tokens)
+        return self._model.generate(prompt, max_tokens=max_tokens)
 
 
 def get_tutor(model, key=None) -> Tutor:

@@ -64,7 +64,7 @@ def main():
 
     if st.button("Send"):
         chatterbox = Service(
-            name="chatterbox",
+            name="chatterbox-native" if view_native else "chatterbox-target",
             user=user,
             tutor=tutor,
             max_tokens=150,
@@ -77,20 +77,25 @@ def main():
             for interaction in history
         ])
         with st.spinner():
-            data = chatterbox.run(history=chat_history, message=user_input)
+            data = chatterbox.run(
+                history=chat_history,
+                message=user_input,
+                fluency=user.fluency(),
+            )
 
         interaction = data["interaction"]
-        if interaction:
-            db.save_interaction(interaction)
+        # if interaction:
+        #     db.save_interaction(interaction)
         st.session_state["chatterbox.history"].append(interaction)
-        st.session_state["chatterbox.language"] = chatterbox.current_language()
 
     history = st.session_state["chatterbox.history"][::-1]
     if not history:
         return
     last_interaction = history[0]
 
-    language = st.session_state["chatterbox.language"]
+    language = (user.native_language_name()
+                if view_native else
+                user.target_language_name())
     user_message = last_interaction["user"][language]
     tutor_message = last_interaction["tutor"][language]
     corrected = last_interaction["user"].get(
