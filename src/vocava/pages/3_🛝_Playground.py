@@ -1,7 +1,6 @@
 import streamlit as st
 
 from vocava import entity
-from vocava.llm import anthropic, mock
 from vocava.service import Service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
@@ -32,10 +31,9 @@ USER_PHRASES = {
 def main():
     st.title('Playground')
 
-    if st.sidebar.checkbox("DEBUG Mode", value=True):
-        model = mock.MockLanguageModel()
-    else:
-        model = anthropic.Claude(ANTHROPIC_API_KEY)
+    debug_mode = st.sidebar.checkbox("DEBUG Mode", value=True)
+    model = "Claude" if not debug_mode else "mock"
+    tutor = entity.get_tutor(model, key=ANTHROPIC_API_KEY)
 
     native_language = st.sidebar.selectbox("Native Language", options=entity.LANGUAGES)
     target_language = st.sidebar.selectbox(
@@ -58,7 +56,7 @@ def main():
             translation_practice = Service(
                 name="playground-generate-translation-practice",
                 user=user,
-                model=model,
+                tutor=tutor,
                 max_tokens=500,
             )
             with st.spinner():
@@ -78,7 +76,7 @@ def main():
             vocabulary_practice = Service(
                 name="playground-generate-vocabulary-practice",
                 user=user,
-                model=model,
+                tutor=tutor,
                 max_tokens=500,
             )
             with st.spinner():
@@ -108,7 +106,7 @@ def main():
             grammar_practice = Service(
                 name="playground-generate-grammar-practice",
                 user=user,
-                model=model,
+                tutor=tutor,
                 max_tokens=500,
             )
             with st.spinner():
