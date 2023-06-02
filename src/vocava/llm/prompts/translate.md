@@ -4,7 +4,10 @@ TEXT:
 
 Provide an explanation of the translation that could aid a language learner, focusing on any particularly tricky translations, idioms, or cultural nuances.
 
-Respond with a parsable JSON payload as if you were a REST API. Use the following output format:
+Respond only with a valid JSON payload as if you were a REST API.
+Remember to escape any quotes inside a JSON string.
+DO NOT include any comments or invalid JSON like `...`.
+Use the following output template:
 ```json
 {
   "translation": "<translation>",
