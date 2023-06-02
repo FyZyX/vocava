@@ -1,6 +1,7 @@
 import typing
 
-from vocava import llm
+import vocava.llm.anthropic
+import vocava.llm.mock
 
 Language: typing.TypeAlias = str
 LANGUAGES: dict[Language, dict[str, str]] = {
@@ -47,8 +48,17 @@ class User:
 
 
 class Tutor:
-    def __init__(self, model: llm.LanguageModel):
+    def __init__(self, model: vocava.llm.LanguageModel):
         self._model = model
 
     def ask(self, prompt: str, max_tokens: int = 250):
         self._model.generate(prompt, max_tokens=max_tokens)
+
+
+def get_tutor(model, key=None) -> Tutor:
+    if model == "Claude":
+        model = vocava.llm.anthropic.Claude(api_key=key)
+    else:
+        model = vocava.llm.mock.MockLanguageModel()
+    tutor = Tutor(model)
+    return tutor

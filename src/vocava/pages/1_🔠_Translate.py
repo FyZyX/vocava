@@ -1,8 +1,6 @@
 import streamlit as st
 
-from vocava import entity
-from vocava.llm import anthropic, mock
-from vocava.service import Service
+from vocava import entity, service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
@@ -10,10 +8,9 @@ ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 def main():
     st.title('Translation')
 
-    if st.sidebar.checkbox("DEBUG Mode", value=True):
-        model = mock.MockLanguageModel()
-    else:
-        model = anthropic.Claude(ANTHROPIC_API_KEY)
+    debug_mode = st.sidebar.checkbox("DEBUG Mode", value=True)
+    model = "Claude" if not debug_mode else "mock"
+    tutor = entity.get_tutor(model, key=ANTHROPIC_API_KEY)
 
     from_lang = st.sidebar.selectbox("From Language", options=entity.LANGUAGES)
     to_lang = st.sidebar.selectbox("To Language", options=entity.LANGUAGES, index=4)
@@ -24,10 +21,10 @@ def main():
         fluency=fluency,
     )
     text = st.text_area("Enter text to translate")
-    translator = Service(
+    translator = service.Service(
         name="translator",
         user=user,
-        model=model,
+        tutor=tutor,
         max_tokens=len(text) + 50,
     )
     if st.button("Translate"):

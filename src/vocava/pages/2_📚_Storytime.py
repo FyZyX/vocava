@@ -1,8 +1,6 @@
 import streamlit as st
 
-from vocava import entity
-from vocava.llm import anthropic, mock
-from vocava.service import Service
+from vocava import entity, service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
@@ -13,10 +11,9 @@ def main():
 
     st.title("Storyteller")
 
-    if st.sidebar.checkbox("DEBUG Mode", value=True):
-        model = mock.MockLanguageModel()
-    else:
-        model = anthropic.Claude(ANTHROPIC_API_KEY)
+    debug_mode = st.sidebar.checkbox("DEBUG Mode", value=True)
+    model = "Claude" if not debug_mode else "mock"
+    tutor = entity.get_tutor(model, key=ANTHROPIC_API_KEY)
 
     native_language = st.sidebar.selectbox("Native Language", options=entity.LANGUAGES)
     target_language = st.sidebar.selectbox(
@@ -30,11 +27,11 @@ def main():
     view_native = st.sidebar.checkbox("View in native language")
 
     concept = st.text_input("What kind of story would you like?")
-    storytime = Service(
+    storytime = service.Service(
         "storytime",
         user=user,
         native_mode=view_native,
-        model=model,
+        tutor=tutor,
         max_tokens=1_000,
     )
     if st.button("Generate Story"):
