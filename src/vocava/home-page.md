@@ -6,6 +6,9 @@
 2. **Fluency Slider**: Users can adjust their level of fluency in the target language, from beginner (1) to expert (10), using a slider. This fluency level influences the complexity of the translated output and its explanation.
 3. **Native Language Option**: A checkbox labeled 'View in native language' allows users to decide whether to have the story and comprehension questions displayed in their native language or the target language.
 
+## Session State
+1. **Persistence of Data**: The state of the session, including selected languages, fluency, and fetched articles, is maintained throughout the user's session.
+
 ## Translation
 
 The **Translation** module offers users the capability to input text in their native language and receive its translation in a chosen target language.
@@ -58,3 +61,15 @@ The **Chatterbox** module is designed to create an interactive language learning
 5. **Message Exchange**: Messages are exchanged interactively between the user and the AI language tutor. The user's message inputs are marked distinctly for clarity in the chat history.
 
 This feature uses advanced language models and is suitable for language learners of all levels, offering an engaging way to practice a new language and receive instant feedback.
+
+## Newsfeed
+
+The **Newsfeed** module allows users to fetch, view, and translate news articles based on a specific keyword. It enhances the learning experience by immersing users in real-world context in their target language.
+
+### Key Features
+
+1. **Customized News Retrieval**: Users can fetch news articles related to any keyword they're interested in. This not only provides a source of reading material that aligns with their interests but also aids in vocabulary acquisition within that particular field or context.
+2. **News Translation**: Users can select any article from the fetched list to translate it into their target language. The translation includes the title, description, and content of the article.
+3. **Interactive User Interface**: Each fetched article is displayed with a title, description, and content. If available, an image from the article is also displayed. For the full article, users are provided a 'Read more' link directing to the original source.
+
+By integrating language learning with everyday context like news articles, the 'Newsfeed' module fosters a more engaging and realistic learning experience. With its ability to cater to individual learning pace and content preferences, this tool can prove invaluable for language learners at any level.
