@@ -1,5 +1,6 @@
 # Vocava
 1. **Language Selection and Fluency Adjustment**: Users can select their native language and the target language for the conversation from a list of options. Users can also set their fluency level in the target language using a slider.
+1. **User and Tutor Setup**: It initializes a 'user' object that stores the user's native language, target language, and fluency level. These are stored in the Streamlit session state to persist across reruns. A 'tutor' is also created using an API key. The tutor model can be switched between "Claude" and "mock" based on the DEBUG mode checkbox.
 
 ## User Preferences
 1. **Selection of Native and Target Language**: Users can select their native language and the target language for translation from a predefined list of languages. The selection retains a memory of the user's previous choices for convenience.
@@ -91,3 +92,16 @@ This **Arcade** module offers an engaging and interactive language learning expe
 4. **Score Tracking**: The module maintains a tally of the user's score, allowing them to track their progress and success throughout the games.
 
 This 'Arcade' module provides a blend of fun and learning, allowing users to build language proficiency in an enjoyable, game-based environment. It's a fantastic resource for language learners, leveraging gaming's motivation and competition elements to enhance language acquisition.
+
+## Culture Corner
+
+The **Culture Corner** module is designed to provide interactive cultural information to the user. It uses Streamlit to create an interactive web application with different services related to cultural information. Here are the key features and functionalities:
+
+### Key Features
+
+1. **Selection of Services**: It offers three different services that the user can choose from - "Culture Info", "Plan a Trip", and "Cultural Faux Pas".
+2. **Culture Info**: When this service is selected, the user can enter the name of a country and an optional region or city. On clicking the "Create Guide" button, a request is made to the "culture-info" service, and the resulting cultural information guide is displayed on the page.
+3. **Plan a Trip**: This service allows the user to input various details related to a potential trip, including the destination country, start and end dates, budget, travel companions, and interests. The "Plan a Trip" button sends these details to the "culture-trip" service, which returns a trip plan that is displayed on the page.
+4. **Cultural Faux Pas**: The user can input a country and an optional region or city, and then click the "Get Cultural Faux Pas" button to retrieve a list of cultural faux pas (blunders) for that location from the "culture-faux-pas" service.
+
+All the services use the Vocava API to interact with the tutor and provide the requested information. This module demonstrates a great way to create an interactive language and culture learning tool with Streamlit and a language model.
