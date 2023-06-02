@@ -1,18 +1,16 @@
 import llm
 import llm.prompt
-from vocava.entity import Language
+from vocava import entity
 
 JSON = None | bool | int | float | str | dict[str, "JSON"] | list["JSON"]
 
 
 class Service:
-    def __init__(self, name: str, model: llm.LanguageModel,
-                 native_language: Language, target_language: Language,
+    def __init__(self, name: str, user: entity.User, model: llm.LanguageModel,
                  native_mode: bool = False, max_tokens: int = 250):
         self._model = model
         self._name = name
-        self._native_language = native_language
-        self._target_language = target_language
+        self._user = user
         self._native_mode = native_mode
         self._max_tokens = max_tokens
 
@@ -22,15 +20,16 @@ class Service:
     def is_in_native_mode(self) -> bool:
         return self._native_mode
 
-    def current_language(self):
-        return self.get_language_name(
-            self._native_language if self._native_mode else self._target_language)
+    def current_language(self) -> str:
+        return (self._user.native_language_name()
+                if self._native_mode else
+                self._user.target_language_name())
 
     def run(self, **kwargs) -> JSON:
         prompt = llm.prompt.load_prompt(
             self._name,
-            native_language=self.get_language_name(self._native_language),
-            target_language=self.get_language_name(self._target_language),
+            native_language=self._user.native_language_name(),
+            target_language=self._user.target_language_name(),
             **kwargs
         )
         response = self._model.generate(prompt, max_tokens=self._max_tokens)

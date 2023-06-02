@@ -1,7 +1,8 @@
 import streamlit as st
 
+from vocava import entity
 from vocava.llm import anthropic, mock
-from vocava.service import LANGUAGES, Service
+from vocava.service import Service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
@@ -17,17 +18,21 @@ def main():
     else:
         model = anthropic.Claude(ANTHROPIC_API_KEY)
 
-    native_language = st.sidebar.selectbox("Native Language", options=LANGUAGES)
-    target_language = st.sidebar.selectbox("Choose Language", options=LANGUAGES,
-                                           index=12)
+    native_language = st.sidebar.selectbox("Native Language", options=entity.LANGUAGES)
+    target_language = st.sidebar.selectbox(
+        "Choose Language", options=entity.LANGUAGES, index=12)
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
+    user = entity.User(
+        native_language=native_language,
+        target_language=target_language,
+        fluency=fluency,
+    )
     view_native = st.sidebar.checkbox("View in native language")
 
     concept = st.text_input("What kind of story would you like?")
     storytime = Service(
         "storytime",
-        native_language=native_language,
-        target_language=target_language,
+        user=user,
         native_mode=view_native,
         model=model,
         max_tokens=1_000,
