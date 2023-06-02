@@ -16,13 +16,14 @@ def main():
 
     from_lang = st.sidebar.selectbox("From Language", options=LANGUAGES)
     to_lang = st.sidebar.selectbox("To Language", options=LANGUAGES, index=4)
+    text = st.text_area("Enter text to translate")
     translator = Service(
         name="translator",
         native_language=from_lang,
         target_language=to_lang,
         model=model,
+        max_tokens=len(text) + 50,
     )
-    text = st.text_area("Enter text to translate")
     if st.button("Translate"):
         with st.spinner():
             data = translator.run(text=text)

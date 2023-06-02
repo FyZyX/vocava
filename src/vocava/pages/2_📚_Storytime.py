@@ -26,10 +26,11 @@ def main():
     concept = st.text_input("What kind of story would you like?")
     storytime = Service(
         "storytime",
-        model=model,
         native_language=native_language,
         target_language=target_language,
         native_mode=view_native,
+        model=model,
+        max_tokens=1_000,
     )
     if st.button("Generate Story"):
         with st.spinner():

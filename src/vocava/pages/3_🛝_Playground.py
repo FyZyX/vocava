@@ -4,7 +4,8 @@ import streamlit as st
 
 from vocava.llm import LanguageModel, anthropic, mock
 from vocava.llm.prompt import load_prompt
-from vocava.translate import LANGUAGES
+
+from vocava.service import LANGUAGES, Service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 USER_VOCABULARY = {
@@ -31,60 +32,6 @@ USER_PHRASES = {
 }
 
 
-class Playground:
-    def __init__(self, model: LanguageModel):
-        self._model = model
-
-    def generate_translation_practice(self, native_language, target_language, fluency):
-        prompt = load_prompt(
-            "playground-generate-translation-practice",
-            native_language=native_language,
-            target_language=target_language,
-            fluency=fluency,
-        )
-        response = self._model.generate(prompt, max_tokens=500)
-        try:
-            start = response.find("{")
-            payload = response[start:]
-            return json.loads(payload)
-        except json.decoder.JSONDecodeError:
-            st.write(response)
-
-    def generate_vocabulary_practice(self, native_language, target_language,
-                                     fluency, known_vocabulary):
-        prompt = load_prompt(
-            "playground-generate-vocabulary-practice",
-            native_language=native_language,
-            target_language=target_language,
-            fluency=fluency,
-            known_vocabulary=known_vocabulary,
-        )
-        response = self._model.generate(prompt, max_tokens=500)
-        try:
-            start = response.find("{")
-            payload = response[start:]
-            return json.loads(payload)
-        except json.decoder.JSONDecodeError:
-            st.write(response)
-
-    def generate_grammar_practice(self, native_language, target_language,
-                                  fluency, known_phrases):
-        prompt = load_prompt(
-            "playground-generate-grammar-practice",
-            native_language=native_language,
-            target_language=target_language,
-            fluency=fluency,
-            known_phrases=known_phrases,
-        )
-        response = self._model.generate(prompt, max_tokens=500)
-        try:
-            start = response.find("{")
-            payload = response[start:]
-            return json.loads(payload)
-        except json.decoder.JSONDecodeError:
-            st.write(response)
-
-
 def main():
     st.title('Playground')
 
@@ -100,7 +47,6 @@ def main():
     target_language_name = LANGUAGES[target_language]["name"]
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
 
-    playground = Playground(model)
     activities = [
         "Translation Practice",
         "Vocabulary Practice",
@@ -109,12 +55,15 @@ def main():
     activity = st.selectbox("Choose an activity", activities)
     if activity == "Translation Practice":
         if st.button("Start"):
+            translation_practice = Service(
+                name="playground-generate-translation-practice",
+                native_language=native_language,
+                target_language=target_language,
+                model=model,
+                max_tokens=500,
+            )
             with st.spinner():
-                data = playground.generate_translation_practice(
-                    native_language=native_language_name,
-                    target_language=target_language_name,
-                    fluency=fluency,
-                )
+                data = translation_practice.run(fluency=fluency)
             st.session_state["exercises"] = data["exercises"]
         vocabulary = st.session_state.get("exercises", [])
         for i, grammar_item in enumerate(vocabulary):
@@ -127,8 +76,15 @@ def main():
                 st.success(grammar_item[native_language_name])
     elif activity == "Vocabulary Practice":
         if st.button("Start"):
+            vocabulary_practice = Service(
+                name="playground-generate-vocabulary-practice",
+                native_language=native_language,
+                target_language=target_language,
+                model=model,
+                max_tokens=500,
+            )
             with st.spinner():
-                data = playground.generate_vocabulary_practice(
+                data = vocabulary_practice.run(
                     native_language=native_language_name,
                     target_language=target_language_name,
                     fluency=fluency,
@@ -150,8 +106,15 @@ def main():
                     st.success(translations)
     elif activity == "Grammar Practice":
         if st.button("Start"):
+            grammar_practice = Service(
+                name="playground-generate-grammar-practice",
+                native_language=native_language,
+                target_language=target_language,
+                model=model,
+                max_tokens=500,
+            )
             with st.spinner():
-                data = playground.generate_grammar_practice(
+                data = grammar_practice.run(
                     native_language=native_language_name,
                     target_language=target_language_name,
                     fluency=fluency,

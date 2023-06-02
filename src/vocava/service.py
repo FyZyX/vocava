@@ -31,7 +31,7 @@ LANGUAGES: dict[Language, dict[str, str]] = {
 class Service:
     def __init__(self, name: str, model: llm.LanguageModel,
                  native_language: Language, target_language: Language,
-                 native_mode: bool = False):
+                 native_mode: bool = False, max_tokens: int = 250):
         self._model = model
         self._name = name
         self._native_language = native_language
@@ -59,5 +59,5 @@ class Service:
             target_language=self.get_language_name(self._target_language),
             **kwargs
         )
-        response = self._model.generate(prompt)
+        response = self._model.generate(prompt, max_tokens=max_tokens)
         return llm.prompt.extract_json(response)
