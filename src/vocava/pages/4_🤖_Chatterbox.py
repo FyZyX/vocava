@@ -92,8 +92,6 @@ def main():
     language = (user.native_language_name()
                 if view_native else
                 user.target_language_name())
-    user_message = last_interaction["user"][language]
-    tutor_message = last_interaction["tutor"][language]
     corrected = last_interaction["user"].get(
         f"{user.target_language_name()}_corrected"
     )
@@ -105,8 +103,8 @@ def main():
         st.info(explanation)
 
     for i, interaction in enumerate(history):
-        chat_message(tutor_message, key=f"{i}")
-        chat_message(user_message, is_user=True, key=f"{i}_user")
+        chat_message(interaction["tutor"][language], key=f"{i}")
+        chat_message(interaction["user"][language], is_user=True, key=f"{i}_user")
 
 
 if __name__ == "__main__":
