@@ -9,7 +9,7 @@ def main():
     if "data" not in st.session_state:
         st.session_state["data"] = None
 
-    st.title("Storyteller")
+    st.title("Storytime")
 
     debug_mode = st.sidebar.checkbox("DEBUG Mode", value=True)
     model = "Claude" if not debug_mode else "mock"
