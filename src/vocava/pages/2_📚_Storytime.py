@@ -15,15 +15,29 @@ def main():
     model = "Claude" if not debug_mode else "mock"
     tutor = entity.get_tutor(model, key=ANTHROPIC_API_KEY)
 
-    native_language = st.sidebar.selectbox("Native Language", options=entity.LANGUAGES)
+    languages = list(entity.LANGUAGES)
+    default_native_lang = st.session_state.get("user.native_lang", languages[0])
+    default_target_lang = st.session_state.get("user.target_lang", languages[4])
+    default_fluency = st.session_state.get("user.fluency", 3)
+    native_language = st.sidebar.selectbox(
+        "Native Language", options=entity.LANGUAGES,
+        index=languages.index(default_native_lang),
+    )
     target_language = st.sidebar.selectbox(
-        "Choose Language", options=entity.LANGUAGES, index=12)
-    fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1)
+        "Choose Language", options=entity.LANGUAGES,
+        index=languages.index(default_target_lang),
+    )
+
+    fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1,
+                                value=default_fluency)
     user = entity.User(
         native_language=native_language,
         target_language=target_language,
         fluency=fluency,
     )
+    st.session_state["user.native_lang"] = native_language
+    st.session_state["user.target_lang"] = target_language
+    st.session_state["user.fluency"] = fluency
     view_native = st.sidebar.checkbox("View in native language")
 
     concept = st.text_input("What kind of story would you like?")
