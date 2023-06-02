@@ -3,15 +3,16 @@ Create 5 unique and creative categories in ${native_language}: CATEGORY-1, CATEG
 Within each category, there must be 5 questions (and associated answers), also in ${native_language}, with the point values 200, 400, 600, 800, 1000, respectively.
 Each question should help with some aspect of language learning. Answers should always be in ($target_language).
 
-You MUST include ALL 5 CATEGORIES and ALL 5 QUESTIONS for each category:
 - Create all 5 categories, give the appropriate names, don't use the placeholders
 - Create all 5 questions for each category
 - Format all categories and questions as specified below
-- All 25 questions must be returned
+- Critical: You MUST include ALL 5 CATEGORIES
+- You MUST include ALL 25 QUESTIONS 
 
 Respond only with a valid JSON payload as if you were a REST API.
-Remember to escape any quotes inside a JSON string
-Use the following output format:
+Remember to escape any quotes inside a JSON string.
+DO NOT include any comments or invalid JSON like `...`.
+Use the following output template:
 ```json
 {
   "categories": [
