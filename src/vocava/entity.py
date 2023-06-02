@@ -67,6 +67,12 @@ class User:
     def target_language_name(self) -> str:
         return self._get_language_name(self._target_language)
 
+    def _get_language_code(self, language: Language):
+        return self._languages[language]["code"]
+
+    def target_language_code(self) -> str:
+        return self._get_language_code(self._target_language)
+
     def known_vocabulary(self):
         return self._vocabulary.get(self.target_language_name())
 

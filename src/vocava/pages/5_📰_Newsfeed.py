@@ -52,7 +52,7 @@ def main():
     keyword = st.text_input("Keyword", "technology")
     if st.button("Fetch News"):
         with st.spinner():
-            articles = fetch_news(keyword, user.target_language_name())
+            articles = fetch_news(keyword, user.target_language_code())
         st.session_state["news.history"] = articles
 
     articles = st.session_state.get("news.history", [])
@@ -60,25 +60,34 @@ def main():
         with st.expander(article['title']):
             st.write(article['description'])
             st.write(article['content'])
-            st.write(f"[Read more]({article['url']})")
+            st.code(article)
+            st.markdown(f"[Read more]({article['url']})")
 
-    if st.button("Translate News"):
-        news_service = Service(
-            name="news-translate",
-            user=user,
-            tutor=tutor,
-            max_tokens=500,
+    if articles:
+        selected_article_title = st.selectbox(
+            "Choose an article to translate",
+            options=[article['title'] for article in articles]
         )
-        for article in st.session_state["news.history"]:
-            with st.spinner():
-                data = news_service.run(
-                    text=article["content"],
-                    fluency=user.fluency(),
-                )
-            article["translation"] = data["translation"]
-            with st.expander(article['title']):
-                st.write(article['translation'])
-                st.write("[Read more]({})".format(article['url']))
+        selected_article = next(article for article in articles if
+                                article['title'] == selected_article_title)
+
+        if st.button("Translate Selected News"):
+            news_service = Service(
+                name="news-translate",
+                user=user,
+                tutor=tutor,
+                max_tokens=500,
+            )
+            if "translation" not in selected_article:
+                with st.spinner():
+                    data = news_service.run(
+                        text=selected_article["content"],
+                        fluency=user.fluency(),
+                    )
+                selected_article["translation"] = data["translation"]
+            with st.expander(selected_article['title']):
+                st.write(selected_article['translation'])
+                st.write("[Read more]({})".format(selected_article['url']))
 
 
 if __name__ == "__main__":
