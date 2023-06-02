@@ -117,9 +117,9 @@ def play_pictionary(user, tutor):
                 st.error(f"Sorry, the word was actually {word} ({translation})")
 
 
-def play_mad_libs(user, tutor):
+def play_madlibs(user, tutor):
     game = service.Service(
-        "arcade-mad-libs-create",
+        "arcade-madlibs-create",
         user=user,
         tutor=tutor,
         max_tokens=300,
@@ -141,7 +141,7 @@ def play_mad_libs(user, tutor):
             answers.append(st.text_input(blank, key=i))
     if st.button("Submit"):
         grader = service.Service(
-            "arcade-mad-libs-grade",
+            "arcade-madlibs-grade",
             user=user,
             tutor=tutor,
             max_tokens=650,
@@ -158,7 +158,7 @@ def play_mad_libs(user, tutor):
 
 
 def play_odd_one_out(user, tutor):
-    view_native = st.checkbox("Native View")
+    view_native = st.sidebar.checkbox("Native View")
     game = service.Service(
         "arcade-odd-one-out",
         user=user,
@@ -221,7 +221,7 @@ def main():
     games = [
         "Pictionary",
         "Odd One Out",
-        "Mad Libs",
+        "MadLibs",
         "Jeopardy",
     ]
     game_name = st.selectbox("Select Game", options=games)
@@ -230,8 +230,8 @@ def main():
         play_jeopardy(user, tutor)
     elif game_name == "Pictionary":
         play_pictionary(user, tutor)
-    elif game_name == "Mad Libs":
-        play_mad_libs(user, tutor)
+    elif game_name == "MadLibs":
+        play_madlibs(user, tutor)
     elif game_name == "Odd One Out":
         play_odd_one_out(user, tutor)
 

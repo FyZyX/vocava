@@ -13,7 +13,7 @@ This should be an integer value.
 
 Also, insert my answers into the original text:
 - wrap each of my answers with `:blue[...]` (a special syntax to color the font)
-- make each answer bold
+- bold each answer using markdown syntax `**XYZ**`
 
 Additionally, include a translation of the filled-in text in ${native_language}.
 
