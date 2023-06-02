@@ -78,7 +78,7 @@ def play_jeopardy(user, tutor):
 
 def play_pictionary(user, tutor):
     game = service.Service(
-        "arcade-pitctionary",
+        "arcade-pictionary",
         user=user,
         tutor=tutor,
         max_tokens=200,
@@ -93,9 +93,9 @@ def play_pictionary(user, tutor):
             )
         image_url = response['data'][0]['url']
         data.update(url=image_url)
-        st.session_state["pitctionary"] = data
+        st.session_state["pictionary"] = data
 
-    data = st.session_state.get("pitctionary")
+    data = st.session_state.get("pictionary")
     if not data:
         return
     word = data["word"]

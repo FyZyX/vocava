@@ -1,7 +1,8 @@
 Act as my language teacher, I am currently at a fluency of about ${fluency} / 10 in ${target_language}.
 Let's play a game called Odd One Out.
-Give me a group of 6 words/phrases in ${target_language} around a common theme, where one of the words/phrases doesn't belong.
-Remember, the odd one out should not belong to the common theme, but should also not stick out obviously.
+Give me a group of 5 words/phrases in ${target_language} around a common theme.
+Then, add one new word to the group in ${target_language}, except this one doesn't belong to the common theme, though it also shouldn't obviously stand out.
+Shuffle the group of all 6 words so the odd one out is in a random spot.
 
 Respond only with a valid JSON payload as if you were a REST API.
 Remember to escape any quotes inside a JSON string
