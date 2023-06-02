@@ -60,8 +60,8 @@ def main():
         with st.expander(article['title']):
             st.write(article['description'])
             st.write(article['content'])
-            st.code(article)
-            st.markdown(f"[Read more]({article['url']})")
+            st.markdown(f"[Read more]({article['link']})")
+    st.divider()
 
     if articles:
         selected_article_title = st.selectbox(
