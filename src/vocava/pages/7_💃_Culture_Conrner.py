@@ -1,3 +1,5 @@
+import datetime
+
 import streamlit as st
 
 from vocava import entity
@@ -46,6 +48,7 @@ def main():
         "Choose a Service", options=list(services.keys())
     )
     selected_service = services[service_choice]
+    st.divider()
 
     if service_choice == "Culture Info":
         if st.button("Create Guide"):
@@ -64,8 +67,48 @@ def main():
             st.markdown(service_info)
 
     elif service_choice == "Plan a Trip":
-        service_info = selected_service.run()
-        st.markdown("\n".join(service_info))
+        cols = st.columns(3)
+        with cols[0]:
+            country = st.text_input("Country")
+        with cols[1]:
+            start_date = st.date_input("Start Date", datetime.date.today() +
+                                       datetime.timedelta(days=30))
+        with cols[2]:
+            end_date = st.date_input("End Date", datetime.date.today() +
+                                     datetime.timedelta(days=37))
+        cols = st.columns(2)
+        with cols[0]:
+            budget = st.number_input("Budget (U.S. $)", min_value=100)
+        with cols[1]:
+            companions = st.selectbox("Travel Companions", [
+                "Alone", "Partner", "Family",
+            ])
+        interests = st.multiselect("Interests", [
+            "Historical Sites", "Nature", "Food", "Music Festivals",
+        ])
+
+        if st.button("Plan a Trip"):
+            selected_service = Service(
+                "culture-trip",
+                user=user,
+                tutor=tutor,
+                max_tokens=2_000,
+                extract_json=False,
+            )
+            with st.spinner():
+                trip_info = selected_service.run(
+                    country=country,
+                    start_date=start_date,
+                    end_date=end_date,
+                    budget=budget,
+                    interests=", ".join(interests),
+                    companions=companions,
+                    fluency=user.fluency(),
+                )
+            st.session_state["culture.trip"] = trip_info
+        if "culture.trip" in st.session_state:
+            trip_info = st.session_state["culture.trip"]
+            st.markdown(trip_info)
 
     elif service_choice == "Cultural Faux Pas":
         service_info = selected_service.run()
