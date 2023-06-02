@@ -48,6 +48,12 @@ def main():
     st.divider()
 
     if service_choice == "Culture Info":
+        cols = st.columns(2)
+        with cols[0]:
+            country = st.text_input("Country")
+        with cols[1]:
+            region = st.text_input("Region or City (Optional)")
+
         if st.button("Create Guide"):
             selected_service = Service(
                 "culture-info",
@@ -57,7 +63,11 @@ def main():
                 extract_json=False,
             )
             with st.spinner():
-                service_info = selected_service.run(fluency=user.fluency())
+                service_info = selected_service.run(
+                    country=country,
+                    region=region,
+                    fluency=user.fluency(),
+                )
             st.session_state["culture.info"] = service_info
 
         if "culture.info" in st.session_state:
