@@ -8,6 +8,7 @@
 
 ## Session State
 1. **Persistence of Data**: The state of the session, including selected languages, fluency, and fetched articles, is maintained throughout the user's session.
+6. **Persistence of Data**: The state of the session, including selected languages, fluency, and game progress, is maintained throughout the user's session.
 
 ## Translation
 
@@ -73,3 +74,20 @@ The **Newsfeed** module allows users to fetch, view, and translate news articles
 3. **Interactive User Interface**: Each fetched article is displayed with a title, description, and content. If available, an image from the article is also displayed. For the full article, users are provided a 'Read more' link directing to the original source.
 
 By integrating language learning with everyday context like news articles, the 'Newsfeed' module fosters a more engaging and realistic learning experience. With its ability to cater to individual learning pace and content preferences, this tool can prove invaluable for language learners at any level.
+
+## Arcade
+
+This **Arcade** module offers an engaging and interactive language learning experience with multiple game options including Jeopardy, Pictionary, MadLibs, and Odd One Out. Each game provides a unique approach to practicing the target language, enhancing vocabulary, fluency, and language comprehension in a fun, immersive environment.
+
+### Key Features
+
+1. **Variety of Games**: Users can choose to play one of four unique games, each designed to target different aspects of language learning:
+    - Jeopardy: Users guess the answers to categorized questions in a classic Jeopardy format.
+    - Pictionary: Users guess words or phrases based on images created in response to a prompt.
+    - MadLibs: Users fill in the blanks of a story with appropriate words, receiving feedback upon submission.
+    - Odd One Out: Users select the word that does not fit within a certain theme.
+2. **Interactive Interface**: Streamlit's user-friendly interface provides dynamic game displays, immediate feedback, and maintains user scores.
+3. **Real-time Feedback**: Upon submitting answers, users receive instant feedback and explanations, supporting their learning process.
+4. **Score Tracking**: The module maintains a tally of the user's score, allowing them to track their progress and success throughout the games.
+
+This 'Arcade' module provides a blend of fun and learning, allowing users to build language proficiency in an enjoyable, game-based environment. It's a fantastic resource for language learners, leveraging gaming's motivation and competition elements to enhance language acquisition.
