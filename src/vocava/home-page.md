@@ -1,4 +1,5 @@
 # Vocava
+1. **Language Selection and Fluency Adjustment**: Users can select their native language and the target language for the conversation from a list of options. Users can also set their fluency level in the target language using a slider.
 
 ## User Preferences
 1. **Selection of Native and Target Language**: Users can select their native language and the target language for translation from a predefined list of languages. The selection retains a memory of the user's previous choices for convenience.
@@ -43,3 +44,17 @@ The **Playground** module provides users with an interactive platform to practic
 3. **Grammar Practice**: This activity presents users with sentences that contain a grammatical error (labeled "mistake"). The users can check the "Show Answer" box to view the corrected sentence, its translation, and an explanation of the error.
 
 Each of these activities begins once the user clicks the "Start" button. A spinner indicates that the practice items are being generated. After the generation is complete, the practice items (phrases, vocabulary words, or sentences) are saved in the session state, so the user can revisit them during the same session.
+
+## Chatterbox
+
+The **Chatterbox** module is designed to create an interactive language learning environment for users, allowing them to chat with a language model tutor in their chosen target language.
+
+### Key features
+
+1. **Conversation Input Method**: Users can choose to input their messages via text or voice. If the 'Voice Input' method is chosen, the user's spoken message is transcribed into text using the OpenAI Whisper ASR API.
+2. **Bilingual Conversation History**: The history of the chat is kept track of in the user's chosen target language. This allows users to refer back to previous parts of the conversation.
+3. **Language Tutor Feedback**: The AI language tutor offers feedback on the user's input, providing a corrected version and explanation if the user's message contained errors. These corrections are displayed in warning and information boxes for easy reference.
+4. **Toggle Native Language View**: Users have the option to view the conversation in their native language. When toggled, this feature translates the conversation back into the user's native language.
+5. **Message Exchange**: Messages are exchanged interactively between the user and the AI language tutor. The user's message inputs are marked distinctly for clarity in the chat history.
+
+This feature uses advanced language models and is suitable for language learners of all levels, offering an engaging way to practice a new language and receive instant feedback.
