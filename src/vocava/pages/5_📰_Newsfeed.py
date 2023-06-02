@@ -57,9 +57,11 @@ def main():
 
     articles = st.session_state.get("news.history", [])
     for article in articles:
-        with st.expander(article['title']):
-            st.write(article['description'])
-            st.write(article['content'])
+        with st.expander(article["title"]):
+            st.write(article["description"])
+            if article["image_url"]:
+                st.image(article["image_url"])
+            st.write(article["content"])
             st.markdown(f"[Read more]({article['link']})")
     st.divider()
 
