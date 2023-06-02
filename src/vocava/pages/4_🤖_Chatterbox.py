@@ -156,13 +156,6 @@ def main():
     input_method = st.sidebar.radio("Input method", ("Text Input", "Voice Input"))
     view_native = st.sidebar.checkbox("View in native language")
 
-    chatterbox = Service(
-        name="chatterbox",
-        user=user,
-        tutor=tutor,
-        max_tokens=150,
-        native_mode=view_native,
-    )
     if input_method == "Text Input":
         user_input = st.text_input("Enter a Message")
     elif input_method == "Voice Input":
@@ -171,6 +164,13 @@ def main():
         return
 
     if st.button("Send"):
+        chatterbox = Service(
+            name="chatterbox",
+            user=user,
+            tutor=tutor,
+            max_tokens=150,
+            native_mode=view_native,
+        )
         with st.spinner():
             interaction, corrected, explanation = chatterbox.run(message=user_input)
 
