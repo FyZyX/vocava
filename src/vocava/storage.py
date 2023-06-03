@@ -8,10 +8,10 @@ from chromadb.utils import embedding_functions
 
 
 # compare them
-def calculate_similarity(actual, expected, api_key):
+def calculate_similarity(actual, expected, api_key, model='embed-multilingual-v2.0'):
     co = cohere.Client(api_key)
     docs = [actual.strip().strip(".").lower(), expected.strip().strip(".").lower()]
-    actual_embed, expected_embed = co.embed(docs).embeddings
+    actual_embed, expected_embed = co.embed(docs, model=model).embeddings
     norm_product = numpy.linalg.norm(actual_embed) * numpy.linalg.norm(expected_embed)
     return numpy.dot(actual_embed, expected_embed) / norm_product
 

@@ -122,7 +122,7 @@ def play_pictionary(user, tutor):
             similarity = storage.calculate_similarity(
                 guess, data["word"], api_key=COHERE_API_KEY)
             if similarity > 0.9:
-                st.success("Good job!")
+                st.success(f"Good job! \"{word}\" is correct!")
             else:
                 st.error(f"Sorry, the word was actually \"{word}\" ({translation})")
     with cols[0]:
