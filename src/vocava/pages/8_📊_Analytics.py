@@ -1,5 +1,7 @@
-import streamlit as st
+from datetime import datetime, timedelta
+
 import plotly.graph_objects as go
+import streamlit as st
 
 from vocava import entity, storage
 
@@ -48,6 +50,12 @@ def get_progress_graph(phrases, vocabulary, mistakes) -> go.Figure:
     return fig
 
 
+def count_recent_items(items, minutes=5):
+    now = datetime.now()
+    threshold = now - timedelta(minutes=minutes)
+    return len([item for item in items if item['timestamp'] > threshold])
+
+
 def analytics(user: entity.User):
     with st.spinner():
         known_phrases = user.known_phrases()
@@ -56,11 +64,17 @@ def analytics(user: entity.User):
 
     cols = st.columns(3)
     with cols[0]:
-        st.metric(label="Translation Count", value=len(known_phrases))
+        recent_phrases = count_recent_items(known_phrases)
+        st.metric(label="Translation Count", value=len(known_phrases),
+                  delta=recent_phrases)
     with cols[1]:
-        st.metric(label="Vocabulary Count", value=len(known_vocabulary))
+        recent_vocabulary = count_recent_items(known_vocabulary)
+        st.metric(label="Vocabulary Count", value=len(known_vocabulary),
+                  delta=recent_vocabulary)
     with cols[2]:
-        st.metric(label="Grammar Count", value=len(known_mistakes))
+        recent_mistakes = count_recent_items(known_mistakes)
+        st.metric(label="Grammar Count", value=len(known_mistakes),
+                  delta=recent_mistakes)
 
     fig = get_progress_graph(known_phrases, known_vocabulary, known_mistakes)
     st.plotly_chart(fig)
