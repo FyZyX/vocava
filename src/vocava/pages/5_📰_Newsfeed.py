@@ -20,9 +20,7 @@ def fetch_news(keyword: str, language: str):
 def main():
     st.title('Newsfeed')
 
-    debug_mode = st.sidebar.checkbox("DEBUG Mode", value=True)
-    model = "Claude" if not debug_mode else "mock"
-    tutor = entity.get_tutor(model, key=ANTHROPIC_API_KEY)
+    tutor = entity.get_tutor("Claude", key=ANTHROPIC_API_KEY)
 
     languages = list(entity.LANGUAGES)
     default_native_lang = st.session_state.get("user.native_lang", languages[0])
