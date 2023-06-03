@@ -14,11 +14,7 @@ openai.api_key = st.secrets["openai_api_key"]
 elevenlabs.set_api_key(st.secrets["eleven_labs_api_key"])
 
 
-def get_audio_transcript():
-    data = st_audiorec()
-    if not data:
-        return None
-
+def get_audio_transcript(data):
     file = io.BytesIO(data)
     file.name = "tmp.wav"
     with st.spinner():
@@ -81,6 +77,7 @@ def main():
 
     speech_input = st.sidebar.checkbox("Enable Input Audio")
     voices = st.session_state.get("voices")
+    synthesize = False
     selected_voice = None
     if can_vocalize:
         synthesize = st.sidebar.checkbox("Enable Output Audio")
@@ -89,12 +86,23 @@ def main():
                 "Output Voice", options=voices
             )
 
+    bypass_button = False
     if speech_input:
-        text = get_audio_transcript()
-    else:
-        text = st.text_area("Enter text to translate")
+        audio = st_audiorec()
+        if audio:
+            with st.spinner():
+                transcript = get_audio_transcript(audio)
+            st.session_state["translate.transcript"] = transcript
+            bypass_button = True
 
-    if st.button("Translate"):
+    default_text = st.session_state.get("translate.transcript", "")
+    text = st.text_area("Enter text to translate", value=default_text)
+
+    if bypass_button:
+        run_translation = True
+    else:
+        run_translation = st.button("Translate")
+    if run_translation:
         translator = service.Service(
             name="translate",
             user=user,
@@ -103,10 +111,17 @@ def main():
         )
         with st.spinner():
             data = translator.run(text=text)
+        data.update(original=text)
         st.session_state["translate"] = data
 
+        if can_vocalize and synthesize:
+            translation = data["translation"]
+            with st.spinner():
+                audio = text_to_speech(translation, voices[selected_voice])
+            st.session_state["translate.audio"] = audio
+
     data = st.session_state.get("translate")
-    if not data or text != data:
+    if not data or text != data["original"]:
         return
 
     translation = data["translation"]
@@ -114,12 +129,7 @@ def main():
 
     st.divider()
     st.text_area("Translated Text", translation)
-    if can_vocalize and selected_voice:
-        if "translate.audio" not in st.session_state:
-            with st.spinner():
-                audio = text_to_speech(translation, voices[selected_voice])
-            st.session_state["translate.audio"] = audio
-
+    if can_vocalize and selected_voice and "translate.audio" in st.session_state:
         audio = st.session_state["translate.audio"]
         st.audio(audio, format='audio/mpeg')
 
