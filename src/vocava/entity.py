@@ -1,4 +1,5 @@
 import datetime
+import time
 import typing
 
 from vocava import llm, storage
@@ -59,6 +60,7 @@ class User:
                 native_language=self.native_language_name(),
                 fluency=self._fluency,
                 translation=translation,
+                timestamp=time.time(),
                 category="phrase",
             )
         ))
@@ -71,6 +73,7 @@ class User:
                 native_language=self.native_language_name(),
                 fluency=self._fluency,
                 translations=translations,
+                timestamp=time.time(),
                 category="vocabulary",
             )
         ))
@@ -84,6 +87,7 @@ class User:
                 correct=correct,
                 translation=translation,
                 explanation=explanation,
+                timestamp=time.time(),
                 category="grammar-mistake",
             )
         ))
