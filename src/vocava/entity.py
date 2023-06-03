@@ -89,7 +89,7 @@ class User:
     def known_vocabulary(self):
         return self._db.query_by_metadata(
             language=self.target_language_name(),
-            native_langauge=self.native_language_name(),
+            native_language=self.native_language_name(),
             category="vocabulary",
         )
 

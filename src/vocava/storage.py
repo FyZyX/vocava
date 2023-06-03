@@ -1,6 +1,7 @@
 import uuid
 
 import chromadb
+from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
 
@@ -23,7 +24,10 @@ class Document:
 class VectorStore:
     def __init__(self, cohere_api_key):
         self._cohere_api_key = cohere_api_key
-        self._db = chromadb.Client()
+        self._db = chromadb.Client(Settings(
+            chroma_db_impl="duckdb+parquet",
+            persist_directory="."
+        ))
         self._embedding_function = embedding_functions.CohereEmbeddingFunction(
             api_key=self._cohere_api_key,
             model_name="embed-multilingual-v2.0",

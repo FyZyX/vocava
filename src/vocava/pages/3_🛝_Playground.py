@@ -1,8 +1,9 @@
 import streamlit as st
 
-from vocava import entity, service
+from vocava import entity, service, storage
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
+COHERE_API_KEY = st.secrets["cohere_api_key"]
 
 
 def translation_practice(user: entity.User, tutor: entity.Tutor):
@@ -28,6 +29,8 @@ def translation_practice(user: entity.User, tutor: entity.Tutor):
 
 
 def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
+    known_vocabulary = user.known_vocabulary()
+    st.warning(known_vocabulary["documents"])
     if st.button("Start"):
         practice_service = service.Service(
             name="playground-generate-vocabulary-practice",
@@ -54,7 +57,8 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
             if isinstance(translations, list):
                 translations = ", ".join(word_item[user.native_language_name()])
             st.success(translations)
-            user.add_vocabulary_word(word, translations)
+            with st.spinner():
+                user.add_vocabulary_word(word, translations)
 
 
 def grammar_practice(user: entity.User, tutor: entity.Tutor):
@@ -109,10 +113,13 @@ def main():
     )
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1,
                                 value=default_fluency)
+    store = storage.VectorStore(COHERE_API_KEY)
+    store.connect()
     user = entity.User(
         native_language=native_language,
         target_language=target_language,
         fluency=fluency,
+        db=store,
     )
     st.session_state["user.native_lang"] = native_language
     st.session_state["user.target_lang"] = target_language
