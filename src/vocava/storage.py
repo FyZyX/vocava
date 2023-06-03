@@ -33,28 +33,21 @@ class Document:
 
 
 class VectorStore:
+    _db = chromadb.Client(Settings(
+        chroma_db_impl="duckdb+parquet",
+        persist_directory=".chromadb"
+    ))
+
     def __init__(self, cohere_api_key):
         self._cohere_api_key = cohere_api_key
-        self._db = None
         self._embedding_function = embedding_functions.CohereEmbeddingFunction(
             api_key=self._cohere_api_key,
             model_name="embed-multilingual-v2.0",
         )
-        self._collection: chromadb.api.Collection | None = None
-
-    def connect(self) -> bool:
-        try:
-            self._db = chromadb.Client(Settings(
-                chroma_db_impl="duckdb+parquet",
-                persist_directory=".chromadb"
-            ))
-        except RuntimeError:
-            return False
-        self._collection = self._db.get_or_create_collection(
+        self._collection: chromadb.api.Collection = self._db.get_or_create_collection(
             name="vocava",
             embedding_function=self._embedding_function,
         )
-        return True
 
     def save(self, *documents: Document) -> bool:
         if not self._collection:
@@ -65,7 +58,10 @@ class VectorStore:
             documents=[doc.content() for doc in documents],
             metadatas=[doc.metadata() for doc in documents],
         )
-        self._db.persist()
+        try:
+            self._db.persist()
+        except RuntimeError:
+            return False
         return True
 
     def query_by_metadata(self, **metadata):

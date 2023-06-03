@@ -29,7 +29,6 @@ def main():
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1,
                                 value=default_fluency)
     store = storage.VectorStore(COHERE_API_KEY)
-    store.connect()
     user = entity.User(
         native_language=native_language,
         target_language=target_language,
