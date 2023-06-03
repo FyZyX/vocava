@@ -86,6 +86,18 @@ class User:
             )
         ))
 
+    def add_translation(self, phrase, translation):
+        self._db.save(storage.Document(
+            content=phrase,
+            metadata=dict(
+                language=self.target_language_name(),
+                native_language=self.native_language_name(),
+                fluency=self._fluency,
+                translation=translation,
+                category="vocabulary",
+            )
+        ))
+
     def known_vocabulary(self):
         return self._db.query_by_metadata(
             language=self.target_language_name(),
