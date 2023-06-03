@@ -39,7 +39,7 @@ def text_to_speech(text, voice_id):
 
 
 def main():
-    st.title('Translation')
+    st.title("Translate")
 
     tutor = entity.get_tutor("Claude", key=ANTHROPIC_API_KEY)
 
