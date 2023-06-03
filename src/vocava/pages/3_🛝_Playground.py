@@ -31,7 +31,7 @@ def translation_practice(user: entity.User, tutor: entity.Tutor):
     st.divider()
     _, col, _ = st.columns([1, 3, 1])
     with col:
-        st.subheader(phrase)
+        st.subheader(f"*:orange[{phrase}]*")
     st.divider()
     cols = st.columns([1, 2, 3, 2, 2])
     with cols[1]:
@@ -91,7 +91,7 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
     st.divider()
     _, col, _ = st.columns([1, 3, 1])
     with col:
-        st.header(f"***:blue[{word}]***")
+        st.header(f"*:blue[{word}]*")
     st.divider()
     cols = st.columns([1, 2, 3, 2, 2])
     with cols[1]:
@@ -133,22 +133,55 @@ def grammar_practice(user: entity.User, tutor: entity.Tutor):
                 fluency=user.fluency(),
                 known_phrases=user.known_phrases(),
             )
-        st.json(data)
-        st.session_state["grammar"] = data["grammar"]
-    vocabulary = st.session_state.get("grammar", [])
-    for i, grammar_item in enumerate(vocabulary):
-        cols = st.columns([2, 1])
+        st.session_state["grammar.new"] = data["grammar"]
+        st.session_state["grammar.index"] = 0
+
+    phrases = st.session_state.get("grammar.new", [])
+    current_index = st.session_state.get("grammar.index", 0)
+    if not phrases:
+        return
+
+    item = phrases[current_index]
+    phrase = item["mistake"]
+    corrected = item["correct"]
+    translation = item["translation"]
+    explanation = item["explanation"]
+
+    st.divider()
+    _, col, _ = st.columns([1, 3, 1])
+    with col:
+        st.subheader(f"*:green[{phrase}]*")
+    st.divider()
+    cols = st.columns([1, 2, 3, 2, 2])
+    with cols[1]:
+        if st.button("< Previous"):
+            prev_index = max(0, current_index - 1)
+            st.session_state["grammar.index"] = prev_index
+            st.experimental_rerun()
+    with cols[2]:
+        show_answer = st.button("Show Correction", key=current_index)
+    with cols[3]:
+        save = st.button("Save")
+    with cols[4]:
+        if st.button("Next >"):
+            next_index = min(len(phrases) - 1, current_index + 1)
+            st.session_state["grammar.index"] = next_index
+            st.experimental_rerun()
+
+    if show_answer:
+        cols = st.columns(2)
         with cols[0]:
-            st.write(grammar_item["mistake"])
-        with cols[1]:
-            show_answer = st.checkbox("Show Answer", key=i)
-        if show_answer:
-            corrected = grammar_item["correct"]
-            translation = grammar_item["translation"]
-            explanation = grammar_item["explanation"]
             st.success(corrected)
+        with cols[1]:
             st.warning(translation)
-            st.info(explanation)
+        st.info(explanation)
+
+    if save:
+        with st.spinner():
+            user.add_grammar_mistake(phrase, corrected, translation, explanation)
+        st.session_state["grammar.new"].pop(current_index)
+        st.session_state["grammar.index"] = 0
+        st.experimental_rerun()
 
 
 def main():

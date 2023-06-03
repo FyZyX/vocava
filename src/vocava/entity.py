@@ -98,6 +98,19 @@ class User:
             )
         ))
 
+    def add_grammar_mistake(self, phrase, corrected, translation, explanation):
+        self._db.save(storage.Document(
+            content=phrase,
+            metadata=dict(
+                langauge=self.target_language_name(),
+                native_language=self.native_language_name(),
+                corrected=corrected,
+                translation=translation,
+                explanation=explanation,
+                category="grammar-mistake",
+            )
+        ))
+
     def known_vocabulary(self):
         return self._db.query_by_metadata(
             language=self.target_language_name(),
