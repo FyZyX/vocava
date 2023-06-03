@@ -6,8 +6,7 @@ class VectorStore:
     def __init__(self, cohere_api_key):
         self._cohere_api_key = cohere_api_key
         self._db = chromadb.Client()
-        embed = chromadb.utils.embedding_functions.CohereEmbeddingFunction
-        self._embedding_function = embed(
+        self._embedding_function = embedding_functions.CohereEmbeddingFunction(
             api_key=self._cohere_api_key,
             model_name="embed-multilingual-v2.0",
         )
@@ -21,11 +20,12 @@ class VectorStore:
 
     def save_interaction(self, interaction) -> bool:
         if not self._collection:
-            return False
+            raise ValueError("Must call connect before querying.")
 
         self._collection.add(
             ids=interaction.ids(),
             documents=interaction.documents(),
             metadatas=interaction.metadata(),
         )
+        self._db.persist()
         return True
