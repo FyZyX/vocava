@@ -58,29 +58,35 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
     with col:
         st.header(f"***:blue[{word}]***")
     st.divider()
-    cols = st.columns([1, 2, 2, 2])
+    cols = st.columns([1, 2, 3, 2, 2])
     with cols[1]:
         if st.button("Previous"):
             prev_index = max(0, current_index - 1)
             st.session_state["current_index"] = prev_index
             st.experimental_rerun()
     with cols[2]:
-        show_answer = st.button("Show Answer", key=current_index)
+        show_answer = st.button("Show Translation", key=current_index)
     with cols[3]:
+        save_word = st.button("Save Word")
+    with cols[4]:
         if st.button("Next"):
             next_index = min(len(vocabulary) - 1, current_index + 1)
             st.session_state["current_index"] = next_index
             st.experimental_rerun()
 
+    translations = word_item[user.native_language_name()]
+    if isinstance(translations, list):
+        translations = ", ".join(word_item[user.native_language_name()])
+
     if show_answer:
-        translations = word_item[user.native_language_name()]
-        if isinstance(translations, list):
-            translations = ", ".join(word_item[user.native_language_name()])
         st.success(translations)
 
-        if st.button("Save Word"):
-            with st.spinner():
-                user.add_vocabulary_word(word, translations)
+    if save_word:
+        with st.spinner():
+            user.add_vocabulary_word(word, translations)
+        st.session_state["vocabulary"].pop(current_index)
+        st.session_state["current_index"] = 0
+        st.experimental_rerun()
 
 
 def grammar_practice(user: entity.User, tutor: entity.Tutor):

@@ -26,7 +26,7 @@ class VectorStore:
         self._cohere_api_key = cohere_api_key
         self._db = chromadb.Client(Settings(
             chroma_db_impl="duckdb+parquet",
-            persist_directory="."
+            persist_directory=".chromadb"
         ))
         self._embedding_function = embedding_functions.CohereEmbeddingFunction(
             api_key=self._cohere_api_key,
