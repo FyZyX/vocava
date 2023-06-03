@@ -78,13 +78,20 @@ class User:
         self._db.save(storage.Document(
             content=word,
             metadata=dict(
+                language=self.target_language_name(),
+                native_language=self.native_language_name(),
+                fluency=self._fluency,
                 translations=translations,
                 category="vocabulary",
             )
         ))
 
     def known_vocabulary(self):
-        return self._vocabulary.get(self.target_language_name())
+        return self._db.query_by_metadata(
+            language=self.target_language_name(),
+            native_langauge=self.native_language_name(),
+            category="vocabulary",
+        )
 
     def known_phrases(self):
         return self._phrases.get(self.target_language_name())

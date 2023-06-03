@@ -47,3 +47,8 @@ class VectorStore:
         )
         self._db.persist()
         return True
+
+    def query_by_metadata(self, **metadata):
+        return self._collection.get(
+            where=metadata
+        )
