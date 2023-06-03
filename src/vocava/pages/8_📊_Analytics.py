@@ -6,6 +6,48 @@ from vocava import entity, storage
 COHERE_API_KEY = st.secrets["cohere_api_key"]
 
 
+def get_progress_graph(phrases, vocabulary, mistakes) -> go.Figure:
+    traces = []
+    colors = ['orange', 'deepskyblue', 'mediumseagreen']
+    names = ['Known Phrases', 'Known Vocabulary', 'Known Mistakes']
+    for idx, values in enumerate([phrases, vocabulary, mistakes]):
+        total = 0
+        dates, counts = [], []
+        for value in values:
+            dates.append(value["timestamp"])
+            total += 1
+            counts.append(total)
+        trace = go.Scatter(x=dates, y=counts, mode='lines+markers', name=names[idx],
+                           line=dict(color=colors[idx]))
+        traces.append(trace)
+
+    fig = go.Figure(data=traces)
+    fig.update_layout(
+        title="Your Learning Progress Over Time",
+        xaxis_title="Date",
+        yaxis_title="Total Count of Saved Items",
+        font=dict(
+            family="Courier New, monospace",
+            size=18,
+            color="#7f7f7f"
+        ),
+        xaxis=dict(
+            showgrid=True,
+        ),
+        yaxis=dict(
+            showgrid=True,
+        ),
+        legend=dict(
+            y=0.5,
+            font=dict(
+                size=16
+            )
+        )
+    )
+
+    return fig
+
+
 def analytics(user: entity.User):
     with st.spinner():
         known_phrases = user.known_phrases()
@@ -20,31 +62,7 @@ def analytics(user: entity.User):
     with cols[2]:
         st.metric(label="Grammar Count", value=len(known_mistakes))
 
-    # Get the progress data
-    progress_data = user.get_progress()
-
-    # Create data lists for the plot
-    dates, counts = [], []
-    for date, count in progress_data:
-        dates.append(date)
-        counts.append(count)
-
-    # Create a Plotly line graph
-    fig = go.Figure(data=go.Scatter(x=dates, y=counts))
-
-    # Add layout
-    fig.update_layout(
-        title="Your Learning Progress Over Time",
-        xaxis_title="Date",
-        yaxis_title="Total Count of Saved Items",
-        font=dict(
-            family="Courier New, monospace",
-            size=18,
-            color="#7f7f7f"
-        )
-    )
-
-    # Display the plot
+    fig = get_progress_graph(known_phrases, known_vocabulary, known_mistakes)
     st.plotly_chart(fig)
 
 

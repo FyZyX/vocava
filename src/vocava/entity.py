@@ -2,6 +2,8 @@ import datetime
 import time
 import typing
 
+import plotly.graph_objects as go
+
 from vocava import llm, storage
 from vocava.llm import anthropic, mock
 
@@ -105,6 +107,7 @@ class User:
             item = {
                 self.target_language_name(): doc,
                 self.native_language_name(): metadata["translation"],
+                "timestamp": datetime.datetime.fromtimestamp(metadata["timestamp"]),
             }
             phrases.append(item)
         return phrases
@@ -122,6 +125,7 @@ class User:
             item = {
                 self.target_language_name(): doc,
                 self.native_language_name(): metadata["translations"],
+                "timestamp": datetime.datetime.fromtimestamp(metadata["timestamp"]),
             }
             vocabulary.append(item)
         return vocabulary
@@ -141,24 +145,13 @@ class User:
                 "correct": metadata["correct"],
                 "explanation": metadata["explanation"],
                 "translation": metadata["translation"],
+                "timestamp": datetime.datetime.fromtimestamp(metadata["timestamp"]),
             }
             mistakes.append(item)
         return mistakes
 
     def fluency(self):
         return self._fluency
-
-    def get_progress(self):
-        return [
-            (datetime.date.today() - datetime.timedelta(days=7), 4),
-            (datetime.date.today() - datetime.timedelta(days=6), 10),
-            (datetime.date.today() - datetime.timedelta(days=5), 12),
-            (datetime.date.today() - datetime.timedelta(days=4), 19),
-            (datetime.date.today() - datetime.timedelta(days=3), 25),
-            (datetime.date.today() - datetime.timedelta(days=2), 31),
-            (datetime.date.today() - datetime.timedelta(days=1), 45),
-            (datetime.date.today(), 47),
-        ]
 
 
 class Tutor:
