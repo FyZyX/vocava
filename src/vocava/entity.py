@@ -112,11 +112,22 @@ class User:
         ))
 
     def known_vocabulary(self):
-        return self._db.query_by_metadata(
+        results = self._db.query_by_metadata(
             language=self.target_language_name(),
             native_language=self.native_language_name(),
             category="vocabulary",
         )
+        ids = results["ids"]
+        docs = results["documents"]
+        metadatas = results["metadatas"]
+        vocabulary = []
+        for doc_id, doc, metadata in zip(ids, docs, metadatas):
+            item = {
+                self.target_language_name(): doc,
+                self.native_language_name(): metadata["translations"],
+            }
+            vocabulary.append(item)
+        return vocabulary
 
     def known_phrases(self):
         return self._phrases.get(self.target_language_name())

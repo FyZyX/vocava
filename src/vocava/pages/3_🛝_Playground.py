@@ -1,3 +1,5 @@
+import random
+
 import streamlit as st
 
 from vocava import entity, service, storage
@@ -60,8 +62,11 @@ def translation_practice(user: entity.User, tutor: entity.Tutor):
         st.experimental_rerun()
 
 
-def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
-    if st.button("Start"):
+def _generate_new_vocabulary(user: entity.User, tutor: entity.Tutor):
+    cols = st.columns(3)
+    with cols[1]:
+        start = st.button("Generate New Words")
+    if start:
         practice_service = service.Service(
             name="playground-generate-vocabulary-practice",
             user=user,
@@ -69,13 +74,13 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
             max_tokens=500,
         )
         with st.spinner():
+            known_vocabulary = user.known_vocabulary()
             data = practice_service.run(
                 fluency=user.fluency(),
-                known_vocabulary=user.known_vocabulary(),
+                known_vocabulary=known_vocabulary,
             )
         st.session_state["vocabulary.new"] = data["vocabulary"]
         st.session_state["vocabulary.index"] = 0
-        st.session_state["vocabulary.known"] = user.known_vocabulary()
 
     vocabulary = st.session_state.get("vocabulary.new", [])
     current_index = st.session_state.get("vocabulary.index", 0)
@@ -88,7 +93,6 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
     if isinstance(translations, list):
         translations = ", ".join(item[user.native_language_name()])
 
-    st.divider()
     _, col, _ = st.columns([1, 3, 1])
     with col:
         st.header(f"*:blue[{word}]*")
@@ -118,6 +122,64 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
         st.session_state["vocabulary.new"].pop(current_index)
         st.session_state["vocabulary.index"] = 0
         st.experimental_rerun()
+
+
+def _review_known_vocabulary(user: entity.User):
+    cols = st.columns(3)
+    with cols[1]:
+        start = st.button("Study New Batch")
+    if start:
+        with st.spinner():
+            known_vocabulary = user.known_vocabulary()
+            if len(known_vocabulary) >= 10:
+                vocabulary = random.choices(known_vocabulary, k=10)
+            else:
+                vocabulary = known_vocabulary
+        st.session_state["vocabulary.review"] = vocabulary
+        st.session_state["vocabulary.review.index"] = 0
+
+    vocabulary = st.session_state.get("vocabulary.review", [])
+    current_index = st.session_state.get("vocabulary.review.index", 0)
+    if not vocabulary:
+        return
+
+    item = vocabulary[current_index]
+    word = item[user.target_language_name()]
+    translations = item[user.native_language_name()]
+    if isinstance(translations, list):
+        translations = ", ".join(item[user.native_language_name()])
+
+    _, col, _ = st.columns([1, 3, 1])
+    with col:
+        st.header(f"*:blue[{word}]*")
+    st.divider()
+    cols = st.columns([1, 2, 3, 2])
+    with cols[1]:
+        if st.button("< Previous", key="review-prev"):
+            prev_index = max(0, current_index - 1)
+            st.session_state["vocabulary.review.index"] = prev_index
+            st.experimental_rerun()
+    with cols[2]:
+        show_answer = st.button("Show Translation", key=f"review-{current_index}")
+    with cols[3]:
+        if st.button("Next >", key="review-next"):
+            next_index = min(len(vocabulary) - 1, current_index + 1)
+            st.session_state["vocabulary.review.index"] = next_index
+            st.experimental_rerun()
+
+    if show_answer:
+        st.success(translations)
+
+
+def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
+    # Set up tabs
+    tabs = st.tabs(["Add New Words", "Review Words"])
+
+    with tabs[0]:
+        _generate_new_vocabulary(user, tutor)
+
+    with tabs[1]:
+        _review_known_vocabulary(user)
 
 
 def grammar_practice(user: entity.User, tutor: entity.Tutor):
