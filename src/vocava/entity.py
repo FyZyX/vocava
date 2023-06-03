@@ -74,6 +74,18 @@ class User:
     def target_language_code(self) -> str:
         return self._get_language_code(self._target_language)
 
+    def add_translation(self, phrase, translation):
+        self._db.save(storage.Document(
+            content=phrase,
+            metadata=dict(
+                language=self.target_language_name(),
+                native_language=self.native_language_name(),
+                fluency=self._fluency,
+                translation=translation,
+                category="phrase",
+            )
+        ))
+
     def add_vocabulary_word(self, word: str, translations: str):
         self._db.save(storage.Document(
             content=word,
@@ -86,30 +98,35 @@ class User:
             )
         ))
 
-    def add_translation(self, phrase, translation):
-        self._db.save(storage.Document(
-            content=phrase,
-            metadata=dict(
-                language=self.target_language_name(),
-                native_language=self.native_language_name(),
-                fluency=self._fluency,
-                translation=translation,
-                category="vocabulary",
-            )
-        ))
-
-    def add_grammar_mistake(self, phrase, corrected, translation, explanation):
+    def add_grammar_mistake(self, phrase, correct, translation, explanation):
         self._db.save(storage.Document(
             content=phrase,
             metadata=dict(
                 langauge=self.target_language_name(),
                 native_language=self.native_language_name(),
-                corrected=corrected,
+                correct=correct,
                 translation=translation,
                 explanation=explanation,
                 category="grammar-mistake",
             )
         ))
+
+    def known_phrases(self):
+        results = self._db.query_by_metadata(
+            language=self.target_language_name(),
+            native_language=self.native_language_name(),
+            category="phrase",
+        )
+        docs = results["documents"]
+        metadatas = results["metadatas"]
+        vocabulary = []
+        for doc, metadata in zip(docs, metadatas):
+            item = {
+                self.target_language_name(): doc,
+                self.native_language_name(): metadata["translation"],
+            }
+            vocabulary.append(item)
+        return vocabulary
 
     def known_vocabulary(self):
         results = self._db.query_by_metadata(
@@ -117,11 +134,10 @@ class User:
             native_language=self.native_language_name(),
             category="vocabulary",
         )
-        ids = results["ids"]
         docs = results["documents"]
         metadatas = results["metadatas"]
         vocabulary = []
-        for doc_id, doc, metadata in zip(ids, docs, metadatas):
+        for doc, metadata in zip(docs, metadatas):
             item = {
                 self.target_language_name(): doc,
                 self.native_language_name(): metadata["translations"],
@@ -129,8 +145,24 @@ class User:
             vocabulary.append(item)
         return vocabulary
 
-    def known_phrases(self):
-        return self._phrases.get(self.target_language_name())
+    def known_mistakes(self):
+        results = self._db.query_by_metadata(
+            language=self.target_language_name(),
+            native_language=self.native_language_name(),
+            category="grammar-mistake",
+        )
+        docs = results["documents"]
+        metadatas = results["metadatas"]
+        vocabulary = []
+        for doc, metadata in zip(docs, metadatas):
+            item = {
+                "mistake": doc,
+                "correct": metadata["correct"],
+                "explanation": metadata["explanation"],
+                "translation": metadata["translation"],
+            }
+            vocabulary.append(item)
+        return vocabulary
 
     def fluency(self):
         return self._fluency
