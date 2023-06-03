@@ -28,9 +28,6 @@ def get_audio_transcript():
 def main():
     st.title("Chatterbox")
 
-    db = storage.VectorStore(COHERE_API_KEY)
-    db.connect()
-
     tutor = entity.get_tutor("Claude", key=ANTHROPIC_API_KEY)
 
     languages = list(entity.LANGUAGES)
@@ -47,10 +44,13 @@ def main():
     )
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1,
                                 value=default_fluency)
+    store = storage.VectorStore(COHERE_API_KEY)
+    store.connect()
     user = entity.User(
         native_language=native_language,
         target_language=target_language,
         fluency=fluency,
+        db=store,
     )
     st.session_state["user.native_lang"] = native_language
     st.session_state["user.target_lang"] = target_language
@@ -91,8 +91,6 @@ def main():
             )
 
         interaction = data["interaction"]
-        # if interaction:
-        #     db.save_interaction(interaction)
         st.session_state["chatterbox.history"].append(interaction)
 
     history = st.session_state["chatterbox.history"][::-1]

@@ -34,8 +34,6 @@ class User:
         self._fluency = fluency
         self._db = db
         self._languages: dict[Language, dict[str, str]] = LANGUAGES
-        self._vocabulary = USER_VOCABULARY
-        self._phrases = USER_PHRASES
 
     def _get_language_name(self, language: Language):
         return self._languages[language]["name"]

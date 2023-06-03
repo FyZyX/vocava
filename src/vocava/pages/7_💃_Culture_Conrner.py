@@ -2,10 +2,11 @@ import datetime
 
 import streamlit as st
 
-from vocava import entity
+from vocava import entity, storage
 from vocava.service import Service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
+COHERE_API_KEY = st.secrets["cohere_api_key"]
 
 
 def main():
@@ -27,10 +28,13 @@ def main():
     )
     fluency = st.sidebar.slider("Fluency", min_value=1, max_value=10, step=1,
                                 value=default_fluency)
+    store = storage.VectorStore(COHERE_API_KEY)
+    store.connect()
     user = entity.User(
         native_language=native_language,
         target_language=target_language,
         fluency=fluency,
+        db=store,
     )
     st.session_state["user.native_lang"] = native_language
     st.session_state["user.target_lang"] = target_language
