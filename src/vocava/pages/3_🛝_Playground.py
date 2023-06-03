@@ -75,7 +75,7 @@ def _review_translations(user: entity.User):
         with st.spinner():
             known_phrases = user.known_phrases()
             if len(known_phrases) >= 10:
-                phrases = random.choices(known_phrases, k=10)
+                phrases = random.sample(known_phrases, k=10)
             else:
                 phrases = known_phrases
         st.session_state["translations.review"] = phrases
@@ -94,7 +94,7 @@ def _review_translations(user: entity.User):
 
     _, col, _ = st.columns([1, 3, 1])
     with col:
-        st.header(f"*:orange[{word}]*")
+        st.subheader(f"*:orange[{word}]*")
     st.divider()
     cols = st.columns([1, 2, 3, 2])
     with cols[1]:
@@ -194,7 +194,7 @@ def _review_known_vocabulary(user: entity.User):
         with st.spinner():
             known_vocabulary = user.known_vocabulary()
             if len(known_vocabulary) >= 10:
-                vocabulary = random.choices(known_vocabulary, k=10)
+                vocabulary = random.sample(known_vocabulary, k=10)
             else:
                 vocabulary = known_vocabulary
         st.session_state["vocabulary.review"] = vocabulary
@@ -317,7 +317,7 @@ def _review_grammar(user: entity.User):
         with st.spinner():
             known_mistakes = user.known_mistakes()
             if len(known_mistakes) >= 10:
-                mistakes = random.choices(known_mistakes, k=10)
+                mistakes = random.sample(known_mistakes, k=10)
             else:
                 mistakes = known_mistakes
         st.session_state["grammar.review"] = mistakes
@@ -359,6 +359,7 @@ def _review_grammar(user: entity.User):
         with cols[1]:
             st.warning(translation)
         st.info(explanation)
+
 
 def grammar_practice(user: entity.User, tutor: entity.Tutor):
     tabs = st.tabs(["Add New Grammar Mistakes", "Review Grammar Mistakes"])
