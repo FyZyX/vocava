@@ -1,10 +1,25 @@
 import streamlit as st
+import requests
 from annotated_text import annotated_text
-
 from vocava import entity, service, storage
+import elevenlabs
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
+ELEVEN_LABS_API_KEY = st.secrets["eleven_labs_api_key"]
+elevenlabs.set_api_key(ELEVEN_LABS_API_KEY)
+
+
+def get_voices():
+    return elevenlabs.voices()
+
+
+def text_to_speech(text, voice_id):
+    return elevenlabs.generate(
+        text=text,
+        voice=voice_id,
+        model="eleven_multilingual_v1"
+    )
 
 
 def main():
@@ -44,7 +59,7 @@ def main():
         name="translate",
         user=user,
         tutor=tutor,
-        max_tokens=6*len(text) + 150,
+        max_tokens=6 * len(text) + 150,
     )
     if st.button("Translate"):
         with st.spinner():
@@ -54,6 +69,21 @@ def main():
         translation = data["translation"]
         explanation = data["explanation"]
         st.text_area("Translated Text", translation)
+
+        if "voices" not in st.session_state:
+            with st.spinner():
+                voices = get_voices()
+            st.json(voices)
+            voices = dict([(voice['name'], voice['id']) for voice in voices])
+            st.session_state["voices"] = voices
+
+        voices = st.session_state["voices"]
+        selected_voice = st.sidebar.selectbox(
+            "Choose Voice", options=voices
+        )
+        audio = text_to_speech(translation, voices[selected_voice])
+        st.audio(audio, format='audio/mpeg')
+
         translation_tagged = [(item["word"], item["pos"])
                               for item in data["dictionary"]]
         tagged = [(item["original"], item["pos"]) for item in data["dictionary"]]
