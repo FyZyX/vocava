@@ -7,18 +7,27 @@ COHERE_API_KEY = st.secrets["cohere_api_key"]
 
 
 def analytics(user: entity.User):
-    st.title("Your Learning Progress")
+    with st.spinner():
+        total_translations = len(user.known_phrases())
+        total_vocabulary = len(user.known_vocabulary())
+        total_mistakes = len(user.known_mistakes())
 
-    st.metric(label="Translation Count", value=len(user.known_phrases()))
-    st.metric(label="Vocabulary Count", value=len(user.known_vocabulary()))
-    st.metric(label="Grammar Count", value=len(user.known_mistakes()))
+    cols = st.columns(3)
+    with cols[0]:
+        st.metric(label="Translation Count", value=total_translations)
+    with cols[1]:
+        st.metric(label="Vocabulary Count", value=total_vocabulary)
+    with cols[2]:
+        st.metric(label="Grammar Count", value=total_mistakes)
 
     # Get the progress data
     progress_data = user.get_progress()
 
     # Create data lists for the plot
-    dates = [item[0] for item in progress_data]
-    counts = [item[1] for item in progress_data]
+    dates, counts = [], []
+    for date, count in progress_data:
+        dates.append(date)
+        counts.append(count)
 
     # Create a Plotly line graph
     fig = go.Figure(data=go.Scatter(x=dates, y=counts))
@@ -42,26 +51,23 @@ def analytics(user: entity.User):
 def main():
     st.title("Analytics")
 
-    st.header("Language Preferences ⚙️")
-    languages = list(entity.LANGUAGES)
-    default_native_lang = st.session_state.get("user.native_lang", languages[0])
-    default_target_lang = st.session_state.get("user.target_lang", languages[4])
-    default_fluency = st.session_state.get("user.fluency", 3)
-    cols = st.columns(2)
-    with cols[0]:
-        native_language = st.selectbox(
+    with st.expander("Language Preferences ⚙️"):
+        languages = list(entity.LANGUAGES)
+        default_native_lang = st.session_state.get("user.native_lang", languages[0])
+        default_target_lang = st.session_state.get("user.target_lang", languages[4])
+        default_fluency = st.session_state.get("user.fluency", 3)
+        native_language = st.sidebar.selectbox(
             "Native Language", options=entity.LANGUAGES,
             index=languages.index(default_native_lang),
         )
-    with cols[1]:
-        target_language = st.selectbox(
+        target_language = st.sidebar.selectbox(
             "Target Language", options=entity.LANGUAGES,
             index=languages.index(default_target_lang),
         )
-    fluency = st.slider(
-        "Fluency", min_value=1, max_value=10, step=1,
-        value=default_fluency,
-    )
+        fluency = st.sidebar.slider(
+            "Fluency", min_value=1, max_value=10, step=1,
+            value=default_fluency,
+        )
 
     store = storage.VectorStore(COHERE_API_KEY)
     store.connect()

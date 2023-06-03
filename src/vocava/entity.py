@@ -1,3 +1,4 @@
+import datetime
 import typing
 
 from vocava import llm, storage
@@ -144,7 +145,16 @@ class User:
         return self._fluency
 
     def get_progress(self):
-        return []
+        return [
+            (datetime.date.today() - datetime.timedelta(days=7), 4),
+            (datetime.date.today() - datetime.timedelta(days=6), 10),
+            (datetime.date.today() - datetime.timedelta(days=5), 12),
+            (datetime.date.today() - datetime.timedelta(days=4), 19),
+            (datetime.date.today() - datetime.timedelta(days=3), 25),
+            (datetime.date.today() - datetime.timedelta(days=2), 31),
+            (datetime.date.today() - datetime.timedelta(days=1), 45),
+            (datetime.date.today(), 47),
+        ]
 
 
 class Tutor:
