@@ -9,7 +9,10 @@ COHERE_API_KEY = st.secrets["cohere_api_key"]
 
 
 def _generate_new_translations(user: entity.User, tutor: entity.Tutor):
-    if st.button("Start"):
+    cols = st.columns(3)
+    with cols[1]:
+        start = st.button("Generate New Phrases")
+    if start:
         practice_service = service.Service(
             name="playground-generate-translation-practice",
             user=user,
@@ -33,7 +36,6 @@ def _generate_new_translations(user: entity.User, tutor: entity.Tutor):
     phrase = item[user.target_language_name()]
     translation = item[user.native_language_name()]
 
-    st.divider()
     _, col, _ = st.columns([1, 3, 1])
     with col:
         st.subheader(f"*:orange[{phrase}]*")
@@ -92,7 +94,7 @@ def _review_translations(user: entity.User):
 
     _, col, _ = st.columns([1, 3, 1])
     with col:
-        st.header(f"*:blue[{word}]*")
+        st.header(f"*:orange[{word}]*")
     st.divider()
     cols = st.columns([1, 2, 3, 2])
     with cols[1]:
@@ -241,8 +243,11 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
         _review_known_vocabulary(user)
 
 
-def grammar_practice(user: entity.User, tutor: entity.Tutor):
-    if st.button("Start"):
+def _generate_new_grammar(user: entity.User, tutor: entity.Tutor):
+    cols = st.columns([1, 2, 1])
+    with cols[1]:
+        start = st.button("Generate New Grammar Mistakes")
+    if start:
         practice_service = service.Service(
             name="playground-generate-grammar-practice",
             user=user,
@@ -257,18 +262,17 @@ def grammar_practice(user: entity.User, tutor: entity.Tutor):
         st.session_state["grammar.new"] = data["grammar"]
         st.session_state["grammar.index"] = 0
 
-    phrases = st.session_state.get("grammar.new", [])
+    mistakes = st.session_state.get("grammar.new", [])
     current_index = st.session_state.get("grammar.index", 0)
-    if not phrases:
+    if not mistakes:
         return
 
-    item = phrases[current_index]
+    item = mistakes[current_index]
     phrase = item["mistake"]
-    corrected = item["correct"]
+    correct = item["correct"]
     translation = item["translation"]
     explanation = item["explanation"]
 
-    st.divider()
     _, col, _ = st.columns([1, 3, 1])
     with col:
         st.subheader(f"*:green[{phrase}]*")
@@ -285,24 +289,85 @@ def grammar_practice(user: entity.User, tutor: entity.Tutor):
         save = st.button("Save")
     with cols[4]:
         if st.button("Next >"):
-            next_index = min(len(phrases) - 1, current_index + 1)
+            next_index = min(len(mistakes) - 1, current_index + 1)
             st.session_state["grammar.index"] = next_index
             st.experimental_rerun()
 
     if show_answer:
         cols = st.columns(2)
         with cols[0]:
-            st.success(corrected)
+            st.success(correct)
         with cols[1]:
             st.warning(translation)
         st.info(explanation)
 
     if save:
         with st.spinner():
-            user.add_grammar_mistake(phrase, corrected, translation, explanation)
+            user.add_grammar_mistake(phrase, correct, translation, explanation)
         st.session_state["grammar.new"].pop(current_index)
         st.session_state["grammar.index"] = 0
         st.experimental_rerun()
+
+
+def _review_grammar(user: entity.User):
+    cols = st.columns(3)
+    with cols[1]:
+        start = st.button("Study New Batch")
+    if start:
+        with st.spinner():
+            known_mistakes = user.known_mistakes()
+            if len(known_mistakes) >= 10:
+                mistakes = random.choices(known_mistakes, k=10)
+            else:
+                mistakes = known_mistakes
+        st.session_state["grammar.review"] = mistakes
+        st.session_state["grammar.review.index"] = 0
+
+    mistakes = st.session_state.get("grammar.review", [])
+    current_index = st.session_state.get("grammar.review.index", 0)
+    if not mistakes:
+        return
+
+    item = mistakes[current_index]
+    phrase = item["mistake"]
+    correct = item["correct"]
+    translation = item["translation"]
+    explanation = item["explanation"]
+
+    _, col, _ = st.columns([1, 3, 1])
+    with col:
+        st.subheader(f"*:green[{phrase}]*")
+    st.divider()
+    cols = st.columns([1, 2, 3, 2])
+    with cols[1]:
+        if st.button("< Previous", key="review-prev"):
+            prev_index = max(0, current_index - 1)
+            st.session_state["grammar.review.index"] = prev_index
+            st.experimental_rerun()
+    with cols[2]:
+        show_answer = st.button("Show Correction", key=f"review-{current_index}")
+    with cols[3]:
+        if st.button("Next >", key="review-next"):
+            next_index = min(len(mistakes) - 1, current_index + 1)
+            st.session_state["grammar.review.index"] = next_index
+            st.experimental_rerun()
+
+    if show_answer:
+        cols = st.columns(2)
+        with cols[0]:
+            st.success(correct)
+        with cols[1]:
+            st.warning(translation)
+        st.info(explanation)
+
+def grammar_practice(user: entity.User, tutor: entity.Tutor):
+    tabs = st.tabs(["Add New Grammar Mistakes", "Review Grammar Mistakes"])
+
+    with tabs[0]:
+        _generate_new_grammar(user, tutor)
+
+    with tabs[1]:
+        _review_grammar(user)
 
 
 def main():

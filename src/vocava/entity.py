@@ -102,7 +102,7 @@ class User:
         self._db.save(storage.Document(
             content=phrase,
             metadata=dict(
-                langauge=self.target_language_name(),
+                language=self.target_language_name(),
                 native_language=self.native_language_name(),
                 correct=correct,
                 translation=translation,
@@ -153,7 +153,7 @@ class User:
         )
         docs = results["documents"]
         metadatas = results["metadatas"]
-        vocabulary = []
+        mistakes = []
         for doc, metadata in zip(docs, metadatas):
             item = {
                 "mistake": doc,
@@ -161,8 +161,8 @@ class User:
                 "explanation": metadata["explanation"],
                 "translation": metadata["translation"],
             }
-            vocabulary.append(item)
-        return vocabulary
+            mistakes.append(item)
+        return mistakes
 
     def fluency(self):
         return self._fluency

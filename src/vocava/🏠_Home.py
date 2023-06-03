@@ -25,7 +25,7 @@ So, buckle up, language adventurers! Let's explore the world of languages with
 ***:violet[Vocava]*** 💫
 """)
 
-st.header("Langauge Preferences ⚙️")
+st.header("Language Preferences ⚙️")
 languages = list(entity.LANGUAGES)
 default_native_lang = st.session_state.get("user.native_lang", languages[0])
 default_target_lang = st.session_state.get("user.target_lang", languages[4])
