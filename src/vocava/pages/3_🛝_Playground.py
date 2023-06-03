@@ -44,19 +44,40 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
                 known_vocabulary=user.known_vocabulary(),
             )
         st.session_state["vocabulary"] = data["vocabulary"]
+        st.session_state["current_index"] = 0
+
     vocabulary = st.session_state.get("vocabulary", [])
-    for i, word_item in enumerate(vocabulary):
-        cols = st.columns([2, 1])
-        word = word_item[user.target_language_name()]
-        with cols[0]:
-            st.write(word)
-        with cols[1]:
-            show_answer = st.checkbox("Show Answer", key=i)
-        if show_answer:
-            translations = word_item[user.native_language_name()]
-            if isinstance(translations, list):
-                translations = ", ".join(word_item[user.native_language_name()])
-            st.success(translations)
+    current_index = st.session_state.get("current_index", 0)
+    if not vocabulary:
+        return
+
+    word_item = vocabulary[current_index]
+    word = word_item[user.target_language_name()]
+
+    st.header(word)
+    st.info(current_index)
+    st.divider()
+    cols = st.columns([1, 2, 2, 2])
+    with cols[1]:
+        if st.button("Previous"):
+            prev_index = max(0, current_index - 1)
+            st.session_state["current_index"] = prev_index
+            st.experimental_rerun()
+    with cols[2]:
+        show_answer = st.button("Show Answer", key=current_index)
+    with cols[3]:
+        if st.button("Next"):
+            next_index = min(len(vocabulary) - 1, current_index + 1)
+            st.session_state["current_index"] = next_index
+            st.experimental_rerun()
+
+    if show_answer:
+        translations = word_item[user.native_language_name()]
+        if isinstance(translations, list):
+            translations = ", ".join(word_item[user.native_language_name()])
+        st.success(translations)
+
+        if st.button("Save Word"):
             with st.spinner():
                 user.add_vocabulary_word(word, translations)
 
