@@ -1,5 +1,23 @@
+import uuid
+
 import chromadb
 from chromadb.utils import embedding_functions
+
+
+class Document:
+    def __init__(self, content: str, metadata: dict):
+        self._id = str(uuid.uuid4())
+        self._content = content
+        self._metadata = metadata
+
+    def id(self):
+        return self._id
+
+    def content(self):
+        return self._content
+
+    def metadata(self):
+        return self._metadata
 
 
 class VectorStore:
@@ -18,14 +36,14 @@ class VectorStore:
             embedding_function=self._embedding_function,
         )
 
-    def save_interaction(self, interaction) -> bool:
+    def save(self, *documents: Document) -> bool:
         if not self._collection:
             raise ValueError("Must call connect before querying.")
 
         self._collection.add(
-            ids=interaction.ids(),
-            documents=interaction.documents(),
-            metadatas=interaction.metadata(),
+            ids=[doc.id() for doc in documents],
+            documents=[doc.content() for doc in documents],
+            metadatas=[doc.metadata() for doc in documents],
         )
         self._db.persist()
         return True
