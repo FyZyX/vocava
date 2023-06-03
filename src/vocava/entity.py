@@ -119,14 +119,14 @@ class User:
         )
         docs = results["documents"]
         metadatas = results["metadatas"]
-        vocabulary = []
+        phrases = []
         for doc, metadata in zip(docs, metadatas):
             item = {
                 self.target_language_name(): doc,
                 self.native_language_name(): metadata["translation"],
             }
-            vocabulary.append(item)
-        return vocabulary
+            phrases.append(item)
+        return phrases
 
     def known_vocabulary(self):
         results = self._db.query_by_metadata(

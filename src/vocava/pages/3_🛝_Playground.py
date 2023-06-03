@@ -71,20 +71,20 @@ def _review_translations(user: entity.User):
         start = st.button("Study New Batch")
     if start:
         with st.spinner():
-            known_vocabulary = user.known_phrases()
-            if len(known_vocabulary) >= 10:
-                vocabulary = random.choices(known_vocabulary, k=10)
+            known_phrases = user.known_phrases()
+            if len(known_phrases) >= 10:
+                phrases = random.choices(known_phrases, k=10)
             else:
-                vocabulary = known_vocabulary
-        st.session_state["translations.review"] = vocabulary
+                phrases = known_phrases
+        st.session_state["translations.review"] = phrases
         st.session_state["translations.review.index"] = 0
 
-    vocabulary = st.session_state.get("translations.review", [])
+    phrases = st.session_state.get("translations.review", [])
     current_index = st.session_state.get("translations.review.index", 0)
-    if not vocabulary:
+    if not phrases:
         return
 
-    item = vocabulary[current_index]
+    item = phrases[current_index]
     word = item[user.target_language_name()]
     translations = item[user.native_language_name()]
     if isinstance(translations, list):
@@ -104,7 +104,7 @@ def _review_translations(user: entity.User):
         show_answer = st.button("Show Translation", key=f"review-{current_index}")
     with cols[3]:
         if st.button("Next >", key="review-next"):
-            next_index = min(len(vocabulary) - 1, current_index + 1)
+            next_index = min(len(phrases) - 1, current_index + 1)
             st.session_state["translations.review.index"] = next_index
             st.experimental_rerun()
 
@@ -116,10 +116,10 @@ def translation_practice(user: entity.User, tutor: entity.Tutor):
     tabs = st.tabs(["Add New Phrases", "Review Phrases"])
 
     with tabs[0]:
-        _generate_new_vocabulary(user, tutor)
+        _generate_new_translations(user, tutor)
 
     with tabs[1]:
-        _review_known_vocabulary(user)
+        _review_translations(user)
 
 
 def _generate_new_vocabulary(user: entity.User, tutor: entity.Tutor):
