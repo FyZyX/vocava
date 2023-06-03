@@ -24,28 +24,6 @@ LANGUAGES: dict[Language, dict[str, str]] = {
     "🇵🇭 Tagalog": {"name": "Tagalog", "flag": "🇵🇭", "code": "tl"},
     "🇻🇳 Vietnamese": {"name": "Vietnamese", "flag": "🇻🇳", "code": "vi"},
 }
-USER_VOCABULARY = {
-    "Japanese": {
-        "はじめまして": ["How do you do?", "Nice to meet you"],
-        "うれしい": ["happy", "glad", "joyful"],
-        "つくづく": ["really", "indeed"],
-        "ストーブ": ["stove"],
-        "さすがに": ["as expected", "sure enough"],
-        "ありゃありゃ": ["my my", "dear me"],
-        "あざとい": ["showy", "flashy", "gaudy"],
-        "ohayou gozaimasu": ["good morning", "hello"],
-        "konnichiwa": ["good day", "hello"],
-        "oyasumi nasai": ["good night"],
-        "sumimasen": ["excuse me"],
-        "arigatou gozaimasu": ["thank you"],
-        "nani o shimasu ka": ["what are you doing?"],
-        "sore wa totemo oishii desu": ["that is very tasty"],
-    }
-}
-USER_PHRASES = {
-    "Japanese": {
-    }
-}
 
 
 class User:
