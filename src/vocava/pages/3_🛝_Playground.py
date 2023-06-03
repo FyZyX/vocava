@@ -29,8 +29,6 @@ def translation_practice(user: entity.User, tutor: entity.Tutor):
 
 
 def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
-    known_vocabulary = user.known_vocabulary()
-    st.warning(known_vocabulary["documents"])
     if st.button("Start"):
         practice_service = service.Service(
             name="playground-generate-vocabulary-practice",
@@ -45,6 +43,7 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
             )
         st.session_state["vocabulary"] = data["vocabulary"]
         st.session_state["current_index"] = 0
+        st.session_state["known_vocabulary"] = user.known_vocabulary()
 
     vocabulary = st.session_state.get("vocabulary", [])
     current_index = st.session_state.get("current_index", 0)
@@ -54,8 +53,10 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
     word_item = vocabulary[current_index]
     word = word_item[user.target_language_name()]
 
-    st.header(word)
-    st.info(current_index)
+    st.divider()
+    _, col, _ = st.columns(3)
+    with col:
+        st.header(f"***:blue[{word}]***")
     st.divider()
     cols = st.columns([1, 2, 2, 2])
     with cols[1]:
