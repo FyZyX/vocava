@@ -41,12 +41,12 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
                 fluency=user.fluency(),
                 known_vocabulary=user.known_vocabulary(),
             )
-        st.session_state["vocabulary"] = data["vocabulary"]
-        st.session_state["current_index"] = 0
-        st.session_state["known_vocabulary"] = user.known_vocabulary()
+        st.session_state["vocabulary.new"] = data["vocabulary"]
+        st.session_state["vocabulary.index"] = 0
+        st.session_state["vocabulary.known"] = user.known_vocabulary()
 
-    vocabulary = st.session_state.get("vocabulary", [])
-    current_index = st.session_state.get("current_index", 0)
+    vocabulary = st.session_state.get("vocabulary.new", [])
+    current_index = st.session_state.get("vocabulary.index", 0)
     if not vocabulary:
         return
 
@@ -62,7 +62,7 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
     with cols[1]:
         if st.button("< Previous"):
             prev_index = max(0, current_index - 1)
-            st.session_state["current_index"] = prev_index
+            st.session_state["vocabulary.index"] = prev_index
             st.experimental_rerun()
     with cols[2]:
         show_answer = st.button("Show Translation", key=current_index)
@@ -71,7 +71,7 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
     with cols[4]:
         if st.button("Next >"):
             next_index = min(len(vocabulary) - 1, current_index + 1)
-            st.session_state["current_index"] = next_index
+            st.session_state["vocabulary.index"] = next_index
             st.experimental_rerun()
 
     translations = word_item[user.native_language_name()]
@@ -84,8 +84,8 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
     if save_word:
         with st.spinner():
             user.add_vocabulary_word(word, translations)
-        st.session_state["vocabulary"].pop(current_index)
-        st.session_state["current_index"] = 0
+        st.session_state["vocabulary.new"].pop(current_index)
+        st.session_state["vocabulary.index"] = 0
         st.experimental_rerun()
 
 
