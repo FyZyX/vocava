@@ -74,8 +74,14 @@ class User:
     def target_language_code(self) -> str:
         return self._get_language_code(self._target_language)
 
-    def add_vocabulary_word(self, document: storage.Document):
-        self._db.save(document)
+    def add_vocabulary_word(self, word: str, translations: str):
+        self._db.save(storage.Document(
+            content=word,
+            metadata=dict(
+                translations=translations,
+                category="vocabulary",
+            )
+        ))
 
     def known_vocabulary(self):
         return self._vocabulary.get(self.target_language_name())
