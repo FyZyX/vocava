@@ -1,13 +1,29 @@
-import streamlit as st
-import requests
-from annotated_text import annotated_text
-from vocava import entity, service, storage
+import io
+
 import elevenlabs
+import openai
+import streamlit as st
+from annotated_text import annotated_text
+
+from vocava import entity, service, storage
+from vocava.st_custom_components import st_audiorec
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
-ELEVEN_LABS_API_KEY = st.secrets["eleven_labs_api_key"]
-elevenlabs.set_api_key(ELEVEN_LABS_API_KEY)
+openai.api_key = st.secrets["openai_api_key"]
+elevenlabs.set_api_key(st.secrets["eleven_labs_api_key"])
+
+
+def get_audio_transcript():
+    data = st_audiorec()
+    if not data:
+        return None
+
+    file = io.BytesIO(data)
+    file.name = "tmp.wav"
+    with st.spinner():
+        response = openai.Audio.transcribe("whisper-1", file)
+    return response["text"]
 
 
 def get_voices():
@@ -54,14 +70,6 @@ def main():
     st.session_state["user.target_lang"] = target_language
     st.session_state["user.fluency"] = fluency
 
-    text = st.text_area("Enter text to translate")
-    translator = service.Service(
-        name="translate",
-        user=user,
-        tutor=tutor,
-        max_tokens=6 * len(text) + 150,
-    )
-
     if "voices" not in st.session_state:
         with st.spinner():
             voices = get_voices()
@@ -70,17 +78,32 @@ def main():
             for voice in voices
         ])
 
+    input_method = st.sidebar.radio("Input method", ("Text Input", "Voice Input"))
     voices = st.session_state.get("voices")
     selected_voice = st.sidebar.selectbox(
-        "Choose Voice", options=voices
+        "Output Voice", options=voices
     )
+
+    if input_method == "Text Input":
+        text = st.text_area("Enter text to translate")
+    elif input_method == "Voice Input":
+        text = get_audio_transcript()
+    else:
+        return
+
     if st.button("Translate"):
+        translator = service.Service(
+            name="translate",
+            user=user,
+            tutor=tutor,
+            max_tokens=6 * len(text) + 150,
+        )
         with st.spinner():
             data = translator.run(text=text)
         st.session_state["translate"] = data
 
     data = st.session_state.get("translate")
-    if not (data and voices):
+    if not data or text != data:
         return
 
     translation = data["translation"]

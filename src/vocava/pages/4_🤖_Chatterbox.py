@@ -1,28 +1,11 @@
-import io
-
-import openai
 import streamlit as st
 from streamlit_chat import message as chat_message
 
 from vocava import storage, entity
 from vocava.service import Service
-from vocava.st_custom_components import st_audiorec
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
-openai.api_key = st.secrets["openai_api_key"]
-
-
-def get_audio_transcript():
-    data = st_audiorec()
-    if not data:
-        return None
-
-    file = io.BytesIO(data)
-    file.name = "tmp.wav"
-    with st.spinner():
-        response = openai.Audio.transcribe("whisper-1", file)
-    return response["text"]
 
 
 def main():
@@ -56,15 +39,8 @@ def main():
     st.session_state["user.target_lang"] = target_language
     st.session_state["user.fluency"] = fluency
 
-    input_method = st.sidebar.radio("Input method", ("Text Input", "Voice Input"))
     view_native = st.sidebar.checkbox("View in native language")
-
-    if input_method == "Text Input":
-        user_input = st.text_input("Enter a Message")
-    elif input_method == "Voice Input":
-        user_input = get_audio_transcript()
-    else:
-        return
+    user_input = st.text_input("Enter a Message")
 
     if "chatterbox.history" not in st.session_state:
         st.session_state["chatterbox.history"] = []
