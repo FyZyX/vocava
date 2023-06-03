@@ -51,59 +51,66 @@ st.info("Don't worry, you'll be able to change these in the sidebar "
 
 st.header("Activities 🥇")
 
-expander = st.expander("Translation")
+expander = st.expander("Translation 📝")
 expander.markdown("""
-The Translation module allows you to translate text from your native language to your target language. The translated
-text also comes with a detailed explanation, supporting your language learning journey.
+The :red[Translation] module allows you to translate text from your native language to 
+your target language. The translated text also comes with a detailed explanation,
+supporting your language learning journey.
 
 [Visit Translation](/Translate)
 """)
 
-expander = st.expander("Storytime")
+expander = st.expander("Storytime 📚")
 expander.markdown("""
-The Storyteller module helps you improve language skills through storytelling. Provide a concept, and our language model
-will generate a unique story around it. You also receive comprehension questions related to the story, enhancing your
+The :orange[Storyteller] module helps you improve language skills through storytelling.
+Provide a concept, and our language model will generate a unique story around it.
+You also receive comprehension questions related to the story, enhancing your
 understanding of the target language.
 
 [Visit Storytime](/Storytime)
 """)
 
-expander = st.expander("Playground")
+expander = st.expander("Playground 🛝")
 expander.markdown("""
-The Playground module offers a platform to practice and refine your language skills. Dive into various activities
-ranging from translation to vocabulary and grammar practice.
+The :green[Playground] module offers a platform to practice and refine your language 
+skills. Dive into various activities ranging from translation to vocabulary and grammar
+practice.
 
 [Visit Playground](/Playground)
 """)
 
-expander = st.expander("Chatterbox")
+expander = st.expander("Chatterbox 🤖")
 expander.markdown("""
-In the Chatterbox module, engage in an interactive chat with a language model tutor in your chosen target language. Get
-instant feedback on your inputs, making real-time learning easier.
+In the :blue[Chatterbox] module, engage in an interactive chat with a language model 
+tutor in your chosen target language. Get instant feedback on your inputs, making
+real-time learning easier.
 
 [Visit Chatterbox](/Chatterbox)
 """)
 
-expander = st.expander("Newsfeed")
+expander = st.expander("Newsfeed 📰")
 expander.markdown("""
-Fetch, view, and translate news articles based on your specific interests in the Newsfeed module. This immersion in
-real-world context enhances your language learning experience.
+Fetch, view, and translate news articles based on your specific interests in the
+:violet[Newsfeed] module. This immersion in real-world context enhances your language
+learning experience.
 
 [Visit Newsfeed](/Newsfeed) 
 """)
 
-expander = st.expander("Arcade")
+expander = st.expander("Arcade 🕹")
 expander.markdown("""
-Add a dash of fun to your learning with the Arcade module. Play games like Jeopardy, Pictionary, MadLibs, and Odd One
-Out, all while improving your vocabulary and fluency.
+Add a dash of fun to your learning with the :red[Arcade] module. Play games like
+Jeopardy, Pictionary, MadLibs, and Odd One Out, all while improving your vocabulary
+and fluency.
 
 [Visit Arcade](/Arcade)
 """)
 
-expander = st.expander("Culture Corner")
+expander = st.expander("Culture Corner 💃")
 expander.markdown("""
-Gain comprehensive cultural information with the Culture Corner module. Whether you want to create a cultural guide,
-plan a trip, or learn about cultural faux pas in different regions, this module provides it all.
+Gain comprehensive cultural information with the :orange[Culture Corner] module.
+Whether you want to create a cultural guide, plan a trip, or learn about
+cultural faux pas in different regions, this module provides it all.
 
-[Visit Culture Corner](/Culture_Conrner)
+[Visit Culture Corner](/Culture_Corner)
 """)
