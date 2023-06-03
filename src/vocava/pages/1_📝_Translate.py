@@ -1,6 +1,7 @@
 import streamlit as st
+from annotated_text import annotated_text
 
-from vocava import entity, service, storage
+from vocava import entity, service, storage, tools
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
@@ -40,10 +41,10 @@ def main():
 
     text = st.text_area("Enter text to translate")
     translator = service.Service(
-        name="translator",
+        name="translate",
         user=user,
         tutor=tutor,
-        max_tokens=len(text) + 50,
+        max_tokens=6*len(text) + 150,
     )
     if st.button("Translate"):
         with st.spinner():
@@ -53,6 +54,14 @@ def main():
         translation = data["translation"]
         explanation = data["explanation"]
         st.text_area("Translated Text", translation)
+        translation_tagged = [(item["word"], item["pos"])
+                              for item in data["dictionary"]]
+        tagged = [(item["original"], item["pos"]) for item in data["dictionary"]]
+        st.divider()
+        annotated_text(translation_tagged)
+        st.divider()
+        annotated_text(tagged)
+        st.divider()
         st.info(explanation)
 
 
