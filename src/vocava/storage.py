@@ -35,7 +35,7 @@ class Document:
 class VectorStore:
     _db = chromadb.Client(Settings(
         chroma_db_impl="duckdb+parquet",
-        persist_directory=".chromadb"
+        persist_directory=".chromadb",
     ))
 
     def __init__(self, cohere_api_key):
