@@ -2,9 +2,6 @@ import streamlit as st
 
 from vocava import entity
 
-with open("home-page.md") as file:
-    content = file.read()
-
 st.title("Welcome to ***:violet[Vocava]*** 🚀")
 
 st.markdown("""
