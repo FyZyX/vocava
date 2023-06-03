@@ -97,7 +97,7 @@ def play_pictionary(user, tutor):
         with st.spinner():
             data = game.run(fluency=user.fluency())
             response = openai.Image.create(
-                prompt=data["prompt"],
+                prompt=data["drawing"],
                 n=1,
                 size="256x256",
             )
@@ -112,16 +112,18 @@ def play_pictionary(user, tutor):
     translation = data["translation"]
     url = data["url"]
     cols = st.columns(2)
-    with cols[0]:
-        st.image(url)
     with cols[1]:
         guess = st.text_input("Guess").lower()
-        if st.button("Guess"):
+        guessed = st.button("Guess")
+        if guessed:
             if guess == data["word"].lower():
                 st.success("Good job!")
             else:
-                st.info(data["prompt"])
-                st.error(f"Sorry, the word was actually {word} ({translation})")
+                st.error(f"Sorry, the word was actually \"{word}\" ({translation})")
+    with cols[0]:
+        st.image(url)
+        if guessed:
+            st.caption(data["drawing"])
 
 
 def play_madlibs(user, tutor):
