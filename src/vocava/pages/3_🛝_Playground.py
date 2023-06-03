@@ -43,16 +43,16 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
             )
         st.session_state["vocabulary"] = data["vocabulary"]
     vocabulary = st.session_state.get("vocabulary", [])
-    for i, grammar_item in enumerate(vocabulary):
+    for i, item in enumerate(vocabulary):
         cols = st.columns([2, 1])
         with cols[0]:
-            st.write(grammar_item[user.target_language_name()])
+            st.write(item[user.target_language_name()])
         with cols[1]:
             show_answer = st.checkbox("Show Answer", key=i)
         if show_answer:
-            translations = grammar_item[user.native_language_name()]
+            translations = item[user.native_language_name()]
             if isinstance(translations, list):
-                st.success(", ".join(grammar_item[user.native_language_name()]))
+                st.success(", ".join(item[user.native_language_name()]))
             else:
                 st.success(translations)
 
