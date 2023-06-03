@@ -1,8 +1,20 @@
 import uuid
 
 import chromadb
+import cohere
+import numpy
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
+
+co = cohere.Client("YOUR_API_KEY")
+
+
+# compare them
+def calculate_similarity(actual, expected):
+    docs = [actual.strip().strip(".").lower(), expected.strip().strip(".").lower()]
+    actual_embed, expected_embed = co.embed(docs).embeddings
+    norm_product = numpy.linalg.norm(actual_embed) * numpy.linalg.norm(expected_embed)
+    return numpy.dot(actual_embed, expected_embed) / norm_product
 
 
 class Document:

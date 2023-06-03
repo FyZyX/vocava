@@ -74,10 +74,8 @@ def play_jeopardy(user, tutor):
         if not answer:
             return
         question["is_answered"] = True
-        # TODO: embed and compare semantic similarity
-        actual = answer.strip().strip(".").lower()
-        expected = question["answer"].strip().strip(".").lower()
-        if actual == expected:
+        similarity = storage.calculate_similarity(answer, question["answer"])
+        if similarity >= 0.9:
             st.success(question["answer"])
             st.session_state["jeopardy.score"] += points
         else:
