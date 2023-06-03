@@ -1,7 +1,7 @@
 import streamlit as st
 from annotated_text import annotated_text
 
-from vocava import entity, service, storage, tools
+from vocava import entity, service, storage
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
