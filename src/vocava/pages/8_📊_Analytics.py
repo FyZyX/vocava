@@ -83,23 +83,22 @@ def analytics(user: entity.User):
 def main():
     st.title("Analytics")
 
-    with st.expander("Language Preferences ⚙️"):
-        languages = list(entity.LANGUAGES)
-        default_native_lang = st.session_state.get("user.native_lang", languages[0])
-        default_target_lang = st.session_state.get("user.target_lang", languages[4])
-        default_fluency = st.session_state.get("user.fluency", 3)
-        native_language = st.sidebar.selectbox(
-            "Native Language", options=entity.LANGUAGES,
-            index=languages.index(default_native_lang),
-        )
-        target_language = st.sidebar.selectbox(
-            "Target Language", options=entity.LANGUAGES,
-            index=languages.index(default_target_lang),
-        )
-        fluency = st.sidebar.slider(
-            "Fluency", min_value=1, max_value=10, step=1,
-            value=default_fluency,
-        )
+    languages = list(entity.LANGUAGES)
+    default_native_lang = st.session_state.get("user.native_lang", languages[0])
+    default_target_lang = st.session_state.get("user.target_lang", languages[4])
+    default_fluency = st.session_state.get("user.fluency", 3)
+    native_language = st.sidebar.selectbox(
+        "Native Language", options=entity.LANGUAGES,
+        index=languages.index(default_native_lang),
+    )
+    target_language = st.sidebar.selectbox(
+        "Target Language", options=entity.LANGUAGES,
+        index=languages.index(default_target_lang),
+    )
+    fluency = st.sidebar.slider(
+        "Fluency", min_value=1, max_value=10, step=1,
+        value=default_fluency,
+    )
 
     store = storage.VectorStore(COHERE_API_KEY)
     store.connect()
