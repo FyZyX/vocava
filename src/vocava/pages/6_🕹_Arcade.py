@@ -74,7 +74,8 @@ def play_jeopardy(user, tutor):
         if not answer:
             return
         question["is_answered"] = True
-        similarity = storage.calculate_similarity(answer, question["answer"])
+        similarity = storage.calculate_similarity(
+            answer, question["answer"], api_key=COHERE_API_KEY)
         if similarity >= 0.9:
             st.success(question["answer"])
             st.session_state["jeopardy.score"] += points
@@ -118,7 +119,9 @@ def play_pictionary(user, tutor):
         guess = st.text_input("Guess")
         guessed = st.button("Guess")
         if guessed:
-            if guess.lower().strip() == data["word"].lower().strip():
+            similarity = storage.calculate_similarity(
+                guess, data["word"], api_key=COHERE_API_KEY)
+            if similarity > 0.9:
                 st.success("Good job!")
             else:
                 st.error(f"Sorry, the word was actually \"{word}\" ({translation})")
