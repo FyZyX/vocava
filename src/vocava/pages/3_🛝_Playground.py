@@ -1,21 +1,20 @@
 import streamlit as st
 
-from vocava import entity
-from vocava.service import Service
+from vocava import entity, service
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 
 
 def translation_practice(user: entity.User, tutor: entity.Tutor):
     if st.button("Start"):
-        service = Service(
+        practice_service = service.Service(
             name="playground-generate-translation-practice",
             user=user,
             tutor=tutor,
             max_tokens=500,
         )
         with st.spinner():
-            data = service.run(fluency=user.fluency())
+            data = practice_service.run(fluency=user.fluency())
         st.session_state["exercises"] = data["exercises"]
     vocabulary = st.session_state.get("exercises", [])
     for i, grammar_item in enumerate(vocabulary):
@@ -30,14 +29,14 @@ def translation_practice(user: entity.User, tutor: entity.Tutor):
 
 def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
     if st.button("Start"):
-        service = Service(
+        practice_service = service.Service(
             name="playground-generate-vocabulary-practice",
             user=user,
             tutor=tutor,
             max_tokens=500,
         )
         with st.spinner():
-            data = service.run(
+            data = practice_service.run(
                 fluency=user.fluency(),
                 known_vocabulary=user.known_vocabulary(),
             )
@@ -59,14 +58,14 @@ def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
 
 def grammar_practice(user: entity.User, tutor: entity.Tutor):
     if st.button("Start"):
-        service = Service(
+        practice_service = service.Service(
             name="playground-generate-grammar-practice",
             user=user,
             tutor=tutor,
             max_tokens=500,
         )
         with st.spinner():
-            data = service.run(
+            data = practice_service.run(
                 fluency=user.fluency(),
                 known_phrases=user.known_phrases(),
             )
