@@ -28,13 +28,9 @@ So, buckle up, language adventurers! Let's explore the world of languages with
 ***:violet[Vocava]*** 💫
 """)
 
-"""
-
-"""
-
 with st.expander("User Preferences"):
     st.markdown("You can setup your language preferences ⚙️ here.")
-    st.info("Don't worry, you'll be able to change these in the sidebar"
+    st.info("Don't worry, you'll be able to change these in the sidebar "
             "later if you need to! 👍")
     languages = list(entity.LANGUAGES)
     default_native_lang = st.session_state.get("user.native_lang", languages[0])
