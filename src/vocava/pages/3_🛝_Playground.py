@@ -16,15 +16,15 @@ def translation_practice(user: entity.User, tutor: entity.Tutor):
         with st.spinner():
             data = practice_service.run(fluency=user.fluency())
         st.session_state["exercises"] = data["exercises"]
-    vocabulary = st.session_state.get("exercises", [])
-    for i, grammar_item in enumerate(vocabulary):
+    exercises = st.session_state.get("exercises", [])
+    for i, exercise in enumerate(exercises):
         cols = st.columns(2)
         with cols[0]:
-            st.write(grammar_item[user.target_language_name()])
+            st.write(exercise[user.target_language_name()])
         with cols[1]:
             show_answer = st.checkbox("Show Answer", key=i)
         if show_answer:
-            st.success(grammar_item[user.native_language_name()])
+            st.success(exercise[user.native_language_name()])
 
 
 def vocabulary_practice(user: entity.User, tutor: entity.Tutor):
