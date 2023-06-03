@@ -2,8 +2,6 @@ import datetime
 import time
 import typing
 
-import plotly.graph_objects as go
-
 from vocava import llm, storage
 from vocava.llm import anthropic, mock
 
@@ -27,6 +25,15 @@ LANGUAGES: dict[Language, dict[str, str]] = {
     "🇸🇪 Swedish": {"name": "Swedish", "flag": "🇸🇪", "code": "sv"},
     "🇵🇭 Tagalog": {"name": "Tagalog", "flag": "🇵🇭", "code": "tl"},
     "🇻🇳 Vietnamese": {"name": "Vietnamese", "flag": "🇻🇳", "code": "vi"},
+}
+VOCALIZED_LANGUAGES = {
+    "🇫🇷 French",
+    "🇩🇪 German",
+    "🇮🇳 Hindi",
+    "🇮🇹 Italian",
+    "🇵🇱 Polish",
+    "🇵🇹 Portuguese",
+    "🇪🇸 Spanish",
 }
 
 

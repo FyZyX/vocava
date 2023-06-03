@@ -70,7 +70,8 @@ def main():
     st.session_state["user.target_lang"] = target_language
     st.session_state["user.fluency"] = fluency
 
-    if "voices" not in st.session_state:
+    can_vocalize = target_language in entity.VOCALIZED_LANGUAGES
+    if can_vocalize and "voices" not in st.session_state:
         with st.spinner():
             voices = get_voices()
         st.session_state["voices"] = dict([
@@ -78,18 +79,20 @@ def main():
             for voice in voices
         ])
 
-    input_method = st.sidebar.radio("Input method", ("Text Input", "Voice Input"))
+    speech_input = st.sidebar.checkbox("Enable Input Audio")
     voices = st.session_state.get("voices")
-    selected_voice = st.sidebar.selectbox(
-        "Output Voice", options=voices
-    )
+    selected_voice = None
+    if can_vocalize:
+        synthesize = st.sidebar.checkbox("Enable Output Audio")
+        if synthesize:
+            selected_voice = st.sidebar.selectbox(
+                "Output Voice", options=voices
+            )
 
-    if input_method == "Text Input":
-        text = st.text_area("Enter text to translate")
-    elif input_method == "Voice Input":
+    if speech_input:
         text = get_audio_transcript()
     else:
-        return
+        text = st.text_area("Enter text to translate")
 
     if st.button("Translate"):
         translator = service.Service(
@@ -111,13 +114,14 @@ def main():
 
     st.divider()
     st.text_area("Translated Text", translation)
-    if "translate.audio" not in st.session_state:
-        with st.spinner():
-            audio = text_to_speech(translation, voices[selected_voice])
-        st.session_state["translate.audio"] = audio
+    if can_vocalize and selected_voice:
+        if "translate.audio" not in st.session_state:
+            with st.spinner():
+                audio = text_to_speech(translation, voices[selected_voice])
+            st.session_state["translate.audio"] = audio
 
-    audio = st.session_state["translate.audio"]
-    st.audio(audio, format='audio/mpeg')
+        audio = st.session_state["translate.audio"]
+        st.audio(audio, format='audio/mpeg')
 
     translation_tagged = [(item["word"], item["pos"])
                           for item in data["dictionary"]]
