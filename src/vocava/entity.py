@@ -143,6 +143,9 @@ class User:
     def fluency(self):
         return self._fluency
 
+    def get_progress(self):
+        return []
+
 
 class Tutor:
     def __init__(self, model: llm.LanguageModel):

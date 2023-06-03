@@ -9,10 +9,9 @@ COHERE_API_KEY = st.secrets["cohere_api_key"]
 def analytics(user: entity.User):
     st.title("Your Learning Progress")
 
-    # Display the metrics
-    st.metric(label="Vocabulary Count", value=user.get_vocabulary_count())
-    st.metric(label="Translation Count", value=user.get_translation_count())
-    st.metric(label="Grammar Count", value=user.get_grammar_count())
+    st.metric(label="Translation Count", value=len(user.known_phrases()))
+    st.metric(label="Vocabulary Count", value=len(user.known_vocabulary()))
+    st.metric(label="Grammar Count", value=len(user.known_mistakes()))
 
     # Get the progress data
     progress_data = user.get_progress()
@@ -40,7 +39,7 @@ def analytics(user: entity.User):
     st.plotly_chart(fig)
 
 
-if __name__ == '__main__':
+def main():
     st.title("Analytics")
 
     st.header("Language Preferences ⚙️")
@@ -73,3 +72,7 @@ if __name__ == '__main__':
         db=store,
     )
     analytics(user)
+
+
+if __name__ == '__main__':
+    main()
