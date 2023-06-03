@@ -61,38 +61,50 @@ def main():
         tutor=tutor,
         max_tokens=6 * len(text) + 150,
     )
+
+    if "voices" not in st.session_state:
+        with st.spinner():
+            voices = get_voices()
+        st.session_state["voices"] = dict([
+            (voice.name, voice.voice_id)
+            for voice in voices
+        ])
+
+    voices = st.session_state.get("voices")
+    selected_voice = st.sidebar.selectbox(
+        "Choose Voice", options=voices
+    )
     if st.button("Translate"):
         with st.spinner():
             data = translator.run(text=text)
-        st.divider()
+        st.session_state["translate"] = data
 
-        translation = data["translation"]
-        explanation = data["explanation"]
-        st.text_area("Translated Text", translation)
+    data = st.session_state.get("translate")
+    if not (data and voices):
+        return
 
-        if "voices" not in st.session_state:
-            with st.spinner():
-                voices = get_voices()
-            st.json(voices)
-            voices = dict([(voice['name'], voice['id']) for voice in voices])
-            st.session_state["voices"] = voices
+    translation = data["translation"]
+    explanation = data["explanation"]
 
-        voices = st.session_state["voices"]
-        selected_voice = st.sidebar.selectbox(
-            "Choose Voice", options=voices
-        )
-        audio = text_to_speech(translation, voices[selected_voice])
-        st.audio(audio, format='audio/mpeg')
+    st.divider()
+    st.text_area("Translated Text", translation)
+    if "translate.audio" not in st.session_state:
+        with st.spinner():
+            audio = text_to_speech(translation, voices[selected_voice])
+        st.session_state["translate.audio"] = audio
 
-        translation_tagged = [(item["word"], item["pos"])
-                              for item in data["dictionary"]]
-        tagged = [(item["original"], item["pos"]) for item in data["dictionary"]]
-        st.divider()
-        annotated_text(translation_tagged)
-        st.divider()
-        annotated_text(tagged)
-        st.divider()
-        st.info(explanation)
+    audio = st.session_state["translate.audio"]
+    st.audio(audio, format='audio/mpeg')
+
+    translation_tagged = [(item["word"], item["pos"])
+                          for item in data["dictionary"]]
+    tagged = [(item["original"], item["pos"]) for item in data["dictionary"]]
+    st.divider()
+    annotated_text(translation_tagged)
+    st.divider()
+    annotated_text(tagged)
+    st.divider()
+    st.info(explanation)
 
 
 if __name__ == "__main__":
