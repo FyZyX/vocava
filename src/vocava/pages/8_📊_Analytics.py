@@ -8,17 +8,17 @@ COHERE_API_KEY = st.secrets["cohere_api_key"]
 
 def analytics(user: entity.User):
     with st.spinner():
-        total_translations = len(user.known_phrases())
-        total_vocabulary = len(user.known_vocabulary())
-        total_mistakes = len(user.known_mistakes())
+        known_phrases = user.known_phrases()
+        known_vocabulary = user.known_vocabulary()
+        known_mistakes = user.known_mistakes()
 
     cols = st.columns(3)
     with cols[0]:
-        st.metric(label="Translation Count", value=total_translations)
+        st.metric(label="Translation Count", value=len(known_phrases))
     with cols[1]:
-        st.metric(label="Vocabulary Count", value=total_vocabulary)
+        st.metric(label="Vocabulary Count", value=len(known_vocabulary))
     with cols[2]:
-        st.metric(label="Grammar Count", value=total_mistakes)
+        st.metric(label="Grammar Count", value=len(known_mistakes))
 
     # Get the progress data
     progress_data = user.get_progress()
