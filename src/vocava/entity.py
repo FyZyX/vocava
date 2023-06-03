@@ -1,6 +1,6 @@
 import typing
 
-from vocava import llm
+from vocava import llm, storage
 from vocava.llm import anthropic, mock
 
 Language: typing.TypeAlias = str
@@ -50,10 +50,11 @@ USER_PHRASES = {
 
 class User:
     def __init__(self, native_language: Language, target_language: Language,
-                 fluency: int):
+                 fluency: int, db: storage.VectorStore):
         self._native_language = native_language
         self._target_language = target_language
         self._fluency = fluency
+        self._db = db
         self._languages: dict[Language, dict[str, str]] = LANGUAGES
         self._vocabulary = USER_VOCABULARY
         self._phrases = USER_PHRASES
@@ -72,6 +73,9 @@ class User:
 
     def target_language_code(self) -> str:
         return self._get_language_code(self._target_language)
+
+    def add_vocabulary_word(self, document: storage.Document):
+        self._db.save(document)
 
     def known_vocabulary(self):
         return self._vocabulary.get(self.target_language_name())
