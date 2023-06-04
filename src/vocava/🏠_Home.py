@@ -1,6 +1,11 @@
+import pathlib
+import sys
+
 import streamlit as st
 
 from vocava import audio, entity
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
 
 st.title("Welcome to ***:violet[Vocava]*** 🚀")
 
