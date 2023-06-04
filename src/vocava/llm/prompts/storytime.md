@@ -4,7 +4,8 @@ The story should be in ${target_language} and revolve around the theme: "${conce
 Additionally, generate a list of at least three reading comprehension questions and associated answers.
 Finally, translate all of this into ${native_language} for the learner's convenience.
 
-Respond with a parsable JSON payload as if you were a REST API. Remember to escape any quotes inside a JSON string.
+Respond with a parsable JSON payload as if you were a REST API.
+Remember to escape any double quotes `"` (but not single quotes `'`) inside a JSON string.
 Use the following output format:
 {
   "story": {

@@ -9,7 +9,8 @@ The more fluency the student has, the more complex the words should be.
 
 You should also provide a list of the meaning(s) of each word in ${native_language} so the student can check their work.
 
-Respond only with a valid JSON payload as if you were a REST API. Remember to escape any quotes inside a JSON string.
+Respond only with a valid JSON payload as if you were a REST API.
+Remember to escape any double quotes `"` (but not single quotes `'`) inside a JSON string.
 Use the following output format:
 {
   "vocabulary": [

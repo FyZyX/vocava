@@ -17,7 +17,7 @@ def _generate_new_translations(user: entity.User, tutor: entity.Tutor):
             name="playground-generate-translation-practice",
             user=user,
             tutor=tutor,
-            max_tokens=500,
+            max_tokens=1_500,
         )
         with st.spinner():
             data = practice_service.run(
@@ -133,7 +133,7 @@ def _generate_new_vocabulary(user: entity.User, tutor: entity.Tutor):
             name="playground-generate-vocabulary-practice",
             user=user,
             tutor=tutor,
-            max_tokens=500,
+            max_tokens=1_500,
         )
         with st.spinner():
             known_vocabulary = user.known_vocabulary()
@@ -252,7 +252,7 @@ def _generate_new_grammar(user: entity.User, tutor: entity.Tutor):
             name="playground-generate-grammar-practice",
             user=user,
             tutor=tutor,
-            max_tokens=500,
+            max_tokens=1_500,
         )
         with st.spinner():
             data = practice_service.run(

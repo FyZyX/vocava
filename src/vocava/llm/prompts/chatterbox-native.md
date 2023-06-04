@@ -9,6 +9,7 @@ Here is my next NATIVE_INPUT:
 ${message}
 
 Respond with a parsable JSON payload as if you were a REST API.
+Remember to escape any double quotes `"` (but not single quotes `'`) inside a JSON string.
 Use the following template structure:
 ```json
 {

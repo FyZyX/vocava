@@ -10,7 +10,8 @@ The more fluency the student has, the more complex the sentences should be.
 You should also provide a correct version of each sentence in ${target_language}, along with an explanation of the grammatical errors, so the student can check their work.
 Don't forget to include a translation of the sentence in ${native_language} as well.
 
-Respond only with a valid JSON payload as if you were a REST API. Remember to escape any quotes inside a JSON string.
+Respond only with a valid JSON payload as if you were a REST API.
+Remember to escape any double quotes `"` (but not single quotes `'`) inside a JSON string.
 Use the following output format:
 {
   "grammar": [

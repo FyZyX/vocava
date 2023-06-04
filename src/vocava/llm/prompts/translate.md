@@ -6,7 +6,7 @@ Provide an explanation of the translation that could aid a language learner, foc
 Additionally, provide part of speech tagging on the translation, as well as a word-by-word translation. This should return a list of objects obtained by splitting the words in the translation, attaching their part-of-speech and translations.
 
 Respond only with a valid JSON payload as if you were a REST API.
-Remember to escape any quotes inside a JSON string.
+Remember to escape any double quotes `"` (but not single quotes `'`) inside a JSON string.
 DO NOT include any comments or invalid JSON like `...`.
 Use the following output template:
 ```json

@@ -4,7 +4,7 @@ Let's play Mad Libs in ${target_language}.
 - Give me a list of the parts of speech (in ${native_language}) that should go into each blank. There should be no more than 9 blanks. Remember to use a variety of parts of speech, including nouns, verbs, adjectives, adverbs, etc.
 
 Respond only with a valid JSON payload as if you were a REST API.
-Remember to escape any quotes inside a JSON string
+Remember to escape any double quotes `"` (but not single quotes `'`) inside a JSON string.
 Use the following output format:
 ```json
 {

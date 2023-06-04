@@ -1,3 +1,5 @@
+import csv
+import io
 from datetime import datetime, timedelta
 
 import plotly.graph_objects as go
@@ -6,6 +8,33 @@ import streamlit as st
 from vocava import entity, storage
 
 COHERE_API_KEY = st.secrets["cohere_api_key"]
+
+
+def create_csv(user, data):
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    native_lang = user.native_language_name()
+    target_lang = user.target_language_name()
+    header = (native_lang, target_lang)
+    if "grammar" in data:
+        header += ("mistake", "explanation")
+    writer.writerow(header)
+
+    for phrase in data.get("phrases", []):
+        row = (phrase[native_lang], phrase[target_lang])
+        writer.writerow(row)
+
+    for phrase in data.get("vocabulary", []):
+        row = (phrase[native_lang], phrase[target_lang])
+        writer.writerow(row)
+
+    for phrase in data.get("grammar", []):
+        row = (phrase["translation"], phrase["correct"], phrase["mistake"],
+               phrase["explanation"])
+        writer.writerow(row)
+
+    return output.getvalue()
 
 
 def get_progress_graph(phrases, vocabulary, mistakes) -> go.Figure:
@@ -78,6 +107,27 @@ def analytics(user: entity.User):
 
     fig = get_progress_graph(known_phrases, known_vocabulary, known_mistakes)
     st.plotly_chart(fig)
+
+    with st.expander("Export Data"):
+        options = ["Phrases", "Vocabulary", "Grammar"]
+        selected_options = st.multiselect("Select data to export:", options)
+
+        data = {}
+        if "Phrases" in selected_options:
+            data["phrases"] = known_phrases
+        if "Vocabulary" in selected_options:
+            data["vocabulary"] = known_vocabulary
+        if "Grammar" in selected_options:
+            data["grammar"] = known_mistakes
+
+        export_data = create_csv(user, data)
+
+        st.download_button(
+            label="Download data as CSV",
+            data=export_data,
+            file_name="vocava_data.csv",
+            mime="text/csv"
+        )
 
 
 def main():

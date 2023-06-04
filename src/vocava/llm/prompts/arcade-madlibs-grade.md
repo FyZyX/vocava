@@ -18,7 +18,7 @@ Also, insert my answers into the original text:
 Additionally, include a translation of the filled-in text in ${native_language}.
 
 Respond only with a valid JSON payload as if you were a REST API.
-Remember to escape any quotes inside a JSON string
+Remember to escape any double quotes `"` (but not single quotes `'`) inside a JSON string.
 Use the following output format:
 ```json
 {

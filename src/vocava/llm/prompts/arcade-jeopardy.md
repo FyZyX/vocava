@@ -10,7 +10,7 @@ Each question should help with some aspect of language learning. Answers should 
 - You MUST include ALL 25 QUESTIONS 
 
 Respond only with a valid JSON payload as if you were a REST API.
-Remember to escape any quotes inside a JSON string.
+Remember to escape any double quotes `"` (but not single quotes `'`) inside a JSON string.
 DO NOT include any comments or invalid JSON like `...`.
 Use the following output template:
 ```json

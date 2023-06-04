@@ -5,7 +5,7 @@ Then, add one new word to the group in ${target_language}, except this one doesn
 Shuffle the group of all 6 words so the odd one out is in a random spot.
 
 Respond only with a valid JSON payload as if you were a REST API.
-Remember to escape any quotes inside a JSON string
+Remember to escape any double quotes `"` (but not single quotes `'`) inside a JSON string.
 Use the following output format:
 ```json
 {
