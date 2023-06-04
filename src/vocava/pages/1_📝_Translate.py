@@ -5,33 +5,13 @@ import openai
 import streamlit as st
 from annotated_text import annotated_text
 
-from vocava import entity, service, storage
+from vocava import audio, entity, service, storage
 from vocava.st_custom_components import st_audiorec
 
 ANTHROPIC_API_KEY = st.secrets["anthropic_api_key"]
 COHERE_API_KEY = st.secrets["cohere_api_key"]
 openai.api_key = st.secrets["openai_api_key"]
 elevenlabs.set_api_key(st.secrets["eleven_labs_api_key"])
-
-
-def get_audio_transcript(data):
-    file = io.BytesIO(data)
-    file.name = "tmp.wav"
-    with st.spinner():
-        response = openai.Audio.transcribe("whisper-1", file)
-    return response["text"]
-
-
-def get_voices():
-    return elevenlabs.voices()
-
-
-def text_to_speech(text, voice_id):
-    return elevenlabs.generate(
-        text=text,
-        voice=voice_id,
-        model="eleven_multilingual_v1"
-    )
 
 
 def main():
@@ -65,32 +45,32 @@ def main():
     st.session_state["user.target_lang"] = target_language
     st.session_state["user.fluency"] = fluency
 
-    can_vocalize = target_language in entity.VOCALIZED_LANGUAGES
-    if can_vocalize and "voices" not in st.session_state:
-        with st.spinner():
-            voices = get_voices()
-        st.session_state["voices"] = dict([
-            (voice.name, voice.voice_id)
-            for voice in voices
-        ])
-
     speech_input = st.sidebar.checkbox("Enable Input Audio")
-    voices = st.session_state.get("voices")
+    can_vocalize = target_language in entity.VOCALIZED_LANGUAGES
     synthesize = False
-    selected_voice = None
+    selected_voice_id = None
     if can_vocalize:
         synthesize = st.sidebar.checkbox("Enable Output Audio")
         if synthesize:
+            if "voices" not in st.session_state:
+                with st.spinner():
+                    data = audio.get_voices()
+                st.session_state["voices"] = dict([
+                    (voice.name, voice.voice_id)
+                    for voice in data
+                ])
+            voices = st.session_state["voices"]
             selected_voice = st.sidebar.selectbox(
                 "Output Voice", options=voices
             )
+            selected_voice_id = voices[selected_voice]
 
     bypass_button = False
     if speech_input:
-        audio = st_audiorec()
-        if audio:
+        audio_input = st_audiorec()
+        if audio_input:
             with st.spinner():
-                transcript = get_audio_transcript(audio)
+                transcript = audio.get_audio_transcript(audio_input)
             st.session_state["translate.transcript"] = transcript
             bypass_button = True
 
@@ -116,8 +96,8 @@ def main():
         if can_vocalize and synthesize:
             translation = data["translation"]
             with st.spinner():
-                audio = text_to_speech(translation, voices[selected_voice])
-            st.session_state["translate.audio"] = audio
+                audio_input = audio.text_to_speech(translation, selected_voice_id)
+            st.session_state["translate.audio"] = audio_input
 
     data = st.session_state.get("translate")
     if not data or text != data["original"]:
@@ -128,9 +108,9 @@ def main():
 
     st.divider()
     st.text_area("Translated Text", translation)
-    if can_vocalize and selected_voice and "translate.audio" in st.session_state:
-        audio = st.session_state["translate.audio"]
-        st.audio(audio, format='audio/mpeg')
+    audio_input = st.session_state.get("translate.audio")
+    if can_vocalize and selected_voice_id and audio_input:
+        st.audio(audio_input, format='audio/mpeg')
 
     translation_tagged = [(item["word"], item["pos"])
                           for item in data["dictionary"]]

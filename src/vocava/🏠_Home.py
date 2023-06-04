@@ -1,6 +1,6 @@
 import streamlit as st
 
-from vocava import entity
+from vocava import audio, entity
 
 st.title("Welcome to ***:violet[Vocava]*** 🚀")
 
@@ -111,3 +111,7 @@ cultural faux pas in different regions, this module provides it all.
 
 [Visit Culture Corner](/Culture_Corner)
 """)
+
+if "voices" not in st.session_state:
+    with st.spinner():
+        data = audio.get_voices()
