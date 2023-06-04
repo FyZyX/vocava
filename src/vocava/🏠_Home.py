@@ -115,3 +115,7 @@ cultural faux pas in different regions, this module provides it all.
 if "voices" not in st.session_state:
     with st.spinner():
         data = audio.get_voices()
+    st.session_state["voices"] = dict([
+        (voice.name, voice.voice_id)
+        for voice in data
+    ])
