@@ -11,7 +11,7 @@ COHERE_API_KEY = st.secrets["cohere_api_key"]
 def get_progress_graph(phrases, vocabulary, mistakes) -> go.Figure:
     data = []
     colors = ['orange', 'deepskyblue', 'mediumseagreen']
-    names = ['Known Phrases', 'Known Vocabulary', 'Known Mistakes']
+    names = ['Phrases', 'Vocabulary', 'Grammar']
     for idx, values in enumerate([phrases, vocabulary, mistakes]):
         timestamps = [value["timestamp"] for value in values]
         trace = go.Histogram(
