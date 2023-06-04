@@ -38,7 +38,7 @@ def main():
     st.session_state["user.target_lang"] = target_language
     st.session_state["user.fluency"] = fluency
 
-    view_native = st.sidebar.checkbox("View in native language")
+    view_native = st.sidebar.checkbox("Native View")
     user_input = st.text_input("Enter a Message")
 
     if "chatterbox.history" not in st.session_state:

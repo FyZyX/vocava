@@ -39,7 +39,7 @@ def main():
     st.session_state["user.native_lang"] = native_language
     st.session_state["user.target_lang"] = target_language
     st.session_state["user.fluency"] = fluency
-    view_native = st.sidebar.checkbox("View in native language")
+    view_native = st.sidebar.checkbox("Native View")
 
     concept = st.text_input("What kind of story would you like?")
     storytime = service.Service(
