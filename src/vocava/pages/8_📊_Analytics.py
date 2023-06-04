@@ -9,25 +9,25 @@ COHERE_API_KEY = st.secrets["cohere_api_key"]
 
 
 def get_progress_graph(phrases, vocabulary, mistakes) -> go.Figure:
-    traces = []
+    data = []
     colors = ['orange', 'deepskyblue', 'mediumseagreen']
     names = ['Known Phrases', 'Known Vocabulary', 'Known Mistakes']
     for idx, values in enumerate([phrases, vocabulary, mistakes]):
-        total = 0
-        dates, counts = [], []
-        for value in values:
-            dates.append(value["timestamp"])
-            total += 1
-            counts.append(total)
-        trace = go.Scatter(x=dates, y=counts, mode='lines+markers', name=names[idx],
-                           line=dict(color=colors[idx]))
-        traces.append(trace)
+        timestamps = [value["timestamp"] for value in values]
+        trace = go.Histogram(
+            name=names[idx],
+            x=timestamps,
+            marker=dict(color=colors[idx]),
+            nbinsx=15,
+        )
+        data.append(trace)
 
-    fig = go.Figure(data=traces)
+    fig = go.Figure(data=data)
     fig.update_layout(
+        barmode='stack',
         title="Your Learning Progress Over Time",
-        xaxis_title="Date",
-        yaxis_title="Total Count of Saved Items",
+        xaxis_title="Time",
+        yaxis_title="Count of Saved Items",
         font=dict(
             family="Courier New, monospace",
             size=18,
